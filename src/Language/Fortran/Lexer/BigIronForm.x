@@ -29,6 +29,14 @@ import Language.Fortran.Util.Position
 }
 
 $digit = [0-9]
+$octalDigit = 0-7
+$hexDigit = [a-f $digit]
+$bit = 0-1
+
+@binary = b\'$bit+\' | \'$bit+\'b
+@octal = o\'$octalDigit+\' | \'$octalDigit+\'o
+@hex = x\'$hexDigit+\' | \'$hexDigit+\'x | z\'$hexDigit+\' | \'$hexDigit+\'z
+
 $letter = [a-z]
 $alphanumeric = [$letter $digit]
 $alphanumericExtended = [$letter $digit \_]
@@ -45,6 +53,7 @@ $special = [\ \=\+\-\*\/\(\)\,\.\$]
 -- Numbers
 @integerConst = $digit+ -- Integer constant
 @posIntegerConst = [1-9] $digit*
+@bozLiteralConst = (@binary|@octal|@hex)
 
 -- For reals
 @exponent = [ed] [\+\-]? @integerConst
@@ -120,7 +129,7 @@ tokens :-
   <keyword> "open" / { fortran77P }           { toSC st >> addSpan TOpen  }
   <keyword> "close" / { fortran77P }          { toSC st >> addSpan TClose  }
   <keyword> "print" / { fortran77P }          { toSC st >> addSpan TPrint  }
-  <keyword> "type" / { bigIronP }             { toSC st >> addSpan TPrint  }
+  <keyword> "type" / { bigIronP }             { toSC st >> addSpan TTypeBI  }
 
   -- Tokens related to non-executable statements
 
@@ -152,6 +161,7 @@ tokens :-
   -- constants
   <st,iif> @exponent / { exponentP }          { addSpanAndMatch TExponent }
   <st,iif,keyword> @integerConst              { addSpanAndMatch TInt }
+  <st,iif,keyword> @bozLiteralConst           { addSpanAndMatch TBozIntBI }
 
   -- String
   <st,iif> \' / { fortran77P }                { strAutomaton 0 }
@@ -409,7 +419,7 @@ lexComment mc = do
   alex <- getAlex
   let modifiedAlex = alex { aiWhiteSensitiveCharCount = 1 }
   case mc of
-    Just '\n' -> return $ Just $ TComment s $ tail m
+    Just '\n' -> return Nothing -- $ Just $ TComment s $ tail m
     Just _ ->
       case alexGetByte modifiedAlex of
         Just (_, newAlex) -> do
@@ -419,7 +429,7 @@ lexComment mc = do
     Nothing ->
       case alexGetByte modifiedAlex of
         Just (_, newAlex) -> lexComment (Just $ (head . lexemeMatch . aiLexeme) newAlex)
-        Nothing -> return $ Just $ TComment s $ tail m
+        Nothing -> return Nothing -- $ Just $ TComment s $ tail m
 
 
 {-
@@ -573,6 +583,7 @@ data Token = TLeftPar             SrcSpan
            | TOpen                SrcSpan
            | TClose               SrcSpan
            | TPrint               SrcSpan
+           | TTypeBI              SrcSpan
            | TDimension           SrcSpan
            | TCommon              SrcSpan
            | TEquivalence         SrcSpan
@@ -587,6 +598,7 @@ data Token = TLeftPar             SrcSpan
            | TFormat              SrcSpan
            | TBlob                SrcSpan String
            | TInt                 SrcSpan String
+           | TBozIntBI            SrcSpan String
            | TExponent            SrcSpan String
            | TBool                SrcSpan String
            | TOpPlus              SrcSpan

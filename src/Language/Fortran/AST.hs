@@ -247,6 +247,7 @@ data Statement a  =
   | StRead2               a SrcSpan (Expression a) (Maybe (AList Expression a))
   | StWrite               a SrcSpan (AList ControlPair a) (Maybe (AList Expression a))
   | StPrint               a SrcSpan (Expression a) (Maybe (AList Expression a))
+  | StTypeBI              a SrcSpan (Expression a) (Maybe (AList Expression a))
   | StOpen                a SrcSpan (AList ControlPair a)
   | StClose               a SrcSpan (AList ControlPair a)
   | StInquire             a SrcSpan (AList ControlPair a)

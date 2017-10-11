@@ -15,7 +15,7 @@ import qualified Data.ByteString.Char8 as B
 import Language.Fortran.Util.Position
 import Language.Fortran.Util.ModFile
 import Language.Fortran.ParserMonad
-import Language.Fortran.Lexer.FixedForm
+import Language.Fortran.Lexer.BigIronForm
 import Language.Fortran.Transformer
 import Language.Fortran.AST
 
@@ -67,6 +67,7 @@ import Debug.Trace
   read                  { TRead _ }
   write                 { TWrite _ }
   print                 { TPrint _ }
+  typeBI                { TTypeBI _ }
   open                  { TOpen _ }
   close                 { TClose _ }
   inquire               { TInquire _ }
@@ -93,6 +94,7 @@ import Debug.Trace
   format                { TFormat _ }
   blob                  { TBlob _ _ }
   int                   { TInt _ _ }
+  bozBI                 { TBozIntBI _ _ }
   exponent              { TExponent _ _ }
   bool                  { TBool _ _ }
   '+'                   { TOpPlus _ }
@@ -246,6 +248,8 @@ EXECUTABLE_STATEMENT
 | write CILIST { StWrite () (getTransSpan $1 $2) $2 Nothing }
 | print FORMAT_ID ',' OUT_IOLIST { StPrint () (getTransSpan $1 $4) $2 (Just $ aReverse $4) }
 | print FORMAT_ID { StPrint () (getTransSpan $1 $2) $2 Nothing }
+| typeBI FORMAT_ID ',' OUT_IOLIST { StTypeBI () (getTransSpan $1 $4) $2 (Just $ aReverse $4) }
+| typeBI FORMAT_ID { StTypeBI () (getTransSpan $1 $2) $2 Nothing }
 | open CILIST { StOpen () (getTransSpan $1 $2) $2 }
 | close CILIST { StClose () (getTransSpan $1 $2) $2 }
 | inquire CILIST { StInquire () (getTransSpan $1 $2) $2 }
@@ -726,7 +730,9 @@ VARIABLE :: { Expression A0 }
 VARIABLE
 : id { ExpValue () (getSpan $1) $ let (TId _ s) = $1 in ValVariable s }
 
-INTEGER_LITERAL :: { Expression A0 } : int { ExpValue () (getSpan $1) $ let (TInt _ i) = $1 in ValInteger i }
+INTEGER_LITERAL :: { Expression A0 }
+: int { ExpValue () (getSpan $1) $ let (TInt _ i) = $1 in ValInteger i }
+| bozBI { let TBozIntBI s i = $1 in ExpValue () s $ ValInteger i }
 
 REAL_LITERAL :: { Expression A0 }
 REAL_LITERAL
