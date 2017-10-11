@@ -64,6 +64,7 @@ data BaseType =
   | TypeLogical
   | TypeCharacter
   | TypeCustom String
+  | TypeByte
   deriving (Ord, Eq, Show, Data, Typeable, Generic)
 
 instance Binary BaseType

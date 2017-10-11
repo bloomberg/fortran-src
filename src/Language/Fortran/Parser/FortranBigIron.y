@@ -79,7 +79,8 @@ import Debug.Trace
   equivalence           { TEquivalence _ }
   external              { TExternal _ }
   dimension             { TDimension _ }
-  character             { TType _ "character" }
+  byte                  { TType _ "byte" }
+  character             { TType _ t | "character" `isPrefixOf` t }
   integer               { TType _ t | "integer" `isPrefixOf` t }
   real                  { TType _ t | "real" `isPrefixOf` t }
   doublePrecision       { TType _ "doubleprecision" }
@@ -796,6 +797,7 @@ TYPE_SPEC
 | doubleComplex KIND_SELECTOR
   { TypeSpec () (getSpan $1) TypeDoubleComplex Nothing }
 | character CHAR_SELECTOR { TypeSpec () (getSpan ($1, $2)) TypeCharacter $2 }
+| byte KIND_SELECTOR { TypeSpec () (getSpan ($1, $2)) TypeByte $2 }
 
 KIND_SELECTOR :: { Maybe (Selector A0) }
 KIND_SELECTOR
@@ -826,6 +828,7 @@ IMP_TYPE_SPEC
 | complex          { TypeSpec () (getSpan $1) TypeComplex Nothing }
 | doubleComplex    { TypeSpec () (getSpan $1) TypeDoubleComplex Nothing }
 | character BASIC_CHAR_SELECTOR { TypeSpec () (getSpan ($1, $2)) TypeCharacter $2 }
+| byte             { TypeSpec () (getSpan $1) TypeByte Nothing }
 
 STAR :: { Expression A0 }
 STAR : '*' { ExpValue () (getSpan $1) ValStar }

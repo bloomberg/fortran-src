@@ -58,6 +58,9 @@ $special = [\ \=\+\-\*\/\(\)\,\.\$]
           | "real*4" | "real*8" | "real*16"
           | "complex*8" | "complex*16" | "complex*32"
 
+@characterLength = "*" $digit+
+@character = "character" @characterLength?
+
 -- Numbers
 @integerConst = $digit+ -- Integer constant
 @posIntegerConst = [1-9] $digit*
@@ -153,6 +156,7 @@ tokens :-
   <keyword> "doublecomplex" / { extended77P } { typeSCChange >> addSpanAndMatch TType }
   <st> "doublecomplex" / { implicitTypeExtendedP }  { addSpanAndMatch TType }
   <keyword> "character" / { fortran77P }      { toSC st >> addSpanAndMatch TType }
+  <keyword> @character / { bigIronP }         { typeSCChange >> addSpanAndMatch TType }
   <st> "character" / { implicitType77P }      { addSpanAndMatch TType }
   <keyword> "implicit" / { fortran77P }       { toSC st >> addSpan TImplicit  }
   <st> "none" / { fortran77P }                { addSpan TNone  }
