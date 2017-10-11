@@ -10,6 +10,7 @@ module Language.Fortran.Parser.FortranBigIron
 import Prelude hiding (EQ,LT,GT) -- Same constructors exist in the AST
 
 import Control.Monad.State
+import Data.List
 import Data.Maybe (isNothing, fromJust)
 import qualified Data.ByteString.Char8 as B
 import Language.Fortran.Util.Position
@@ -79,11 +80,11 @@ import Debug.Trace
   external              { TExternal _ }
   dimension             { TDimension _ }
   character             { TType _ "character" }
-  integer               { TType _ "integer" }
-  real                  { TType _ "real" }
+  integer               { TType _ t | "integer" `isPrefixOf` t }
+  real                  { TType _ t | "real" `isPrefixOf` t }
   doublePrecision       { TType _ "doubleprecision" }
-  logical               { TType _ "logical" }
-  complex               { TType _ "complex" }
+  logical               { TType _ t | "logical" `isPrefixOf` t }
+  complex               { TType _ t | "complex" `isPrefixOf` t }
   doubleComplex         { TType _ "doublecomplex" }
   intrinsic             { TIntrinsic _ }
   implicit              { TImplicit _ }
