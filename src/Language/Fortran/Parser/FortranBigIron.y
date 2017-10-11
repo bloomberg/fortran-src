@@ -92,6 +92,7 @@ import Debug.Trace
   entry                 { TEntry _ }
   none                  { TNone _ }
   data                  { TData _ }
+  automatic             { TAutomatic _ }
   format                { TFormat _ }
   blob                  { TBlob _ _ }
   int                   { TInt _ _ }
@@ -395,6 +396,7 @@ NONEXECUTABLE_STATEMENT
 | common COMMON_GROUPS { StCommon () (getTransSpan $1 $2) (aReverse $2) }
 | equivalence EQUIVALENCE_GROUPS { StEquivalence () (getTransSpan $1 $2) (aReverse $2) }
 | data DATA_GROUPS { StData () (getTransSpan $1 $2) (aReverse $2) }
+| automatic DECLARATORS { StAutomatic () (getTransSpan $1 $2) (aReverse $2) }
 -- Following is a fake node to make arbitrary FORMAT statements parsable.
 -- Must be fixed in the future. TODO
 | format blob
