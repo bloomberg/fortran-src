@@ -48,6 +48,8 @@ $special = [\ \=\+\-\*\/\(\)\,\.\$]
 @id = $letter $alphanumeric{0,5}
 @label = [1-9] $digit{0,4}
 
+@idBI = $letter $alphanumericExtended*
+
 @datatype = "integer" | "real" | "doubleprecision" | "complex" | "logical"
 
 -- Numbers
@@ -85,6 +87,7 @@ tokens :-
 
   <keyword> @id / { idP }                     { toSC st >> addSpanAndMatch TId }
   <keyword> @idExtended / { extendedIdP }     { toSC st >> addSpanAndMatch TId }
+  <keyword> @idBI / { extendedIdP }           { toSC st >> addSpanAndMatch TId }
 
   <keyword> "include" / { extended77P }       { toSC st >> addSpan TInclude }
 
@@ -200,6 +203,7 @@ tokens :-
   -- ID
   <st,iif> @id                                { addSpanAndMatch TId }
   <st,iif> @idExtended / { extended77P }      { addSpanAndMatch TId }
+  <st,iif> @idBI / { bigIronP }               { addSpanAndMatch TId }
 
   -- Strings
   <st> @posIntegerConst "h" / { fortran66P }  { lexHollerith }
@@ -216,7 +220,7 @@ formatP _ _ _ ai
   | otherwise = False
 
 formatExtendedP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
-formatExtendedP fv _ _ ai = fv == Fortran77Extended &&
+formatExtendedP fv _ _ ai = fv `elem` [Fortran77Extended, FortranBigIron] &&
   case xs of
     [ TFormat _, _ ] -> False
     [ TLabel _ _, TFormat _ ] -> False
@@ -237,7 +241,7 @@ implicitStP fv _ _ ai = checkPreviousTokensInLine f ai
     f _ = False
 
 extendedIdP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
-extendedIdP fv a b ai = fv == Fortran77Extended && idP fv a b ai
+extendedIdP fv a b ai = fv `elem` [Fortran77Extended, FortranBigIron] && idP fv a b ai
 
 idP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
 idP fv _ _ ai = not (doP fv ai) && equalFollowsP fv ai
