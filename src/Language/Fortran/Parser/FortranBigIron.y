@@ -553,6 +553,8 @@ VARIABLE_DECLARATOR
 : VARIABLE { DeclVariable () (getSpan $1) $1 Nothing Nothing }
 | VARIABLE '*' EXPRESSION
   { DeclVariable () (getTransSpan $1 $3) $1 (Just $3) Nothing }
+| VARIABLE '*' '(' '*' ')'
+  { DeclVariable () (getTransSpan $1 $3) $1 (Just $ ExpValue () (getSpan $4) ValStar) Nothing }
 
 DIMENSION_DECLARATORS :: { AList DimensionDeclarator A0 }
 DIMENSION_DECLARATORS
