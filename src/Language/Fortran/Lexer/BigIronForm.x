@@ -175,7 +175,8 @@ tokens :-
   <st,iif,keyword> @bozLiteralConst           { addSpanAndMatch TBozIntBI }
 
   -- String
-  <st,iif> \' / { fortran77P }                { strAutomaton 0 }
+  <st,iif> \' / { fortran77P }                { strAutomaton '\'' 0 }
+  <st,iif> \" / { fortran77P }                { strAutomaton '"'  0 }
 
   -- Logicals
   <st,iif> (".true."|".false.")               { addSpanAndMatch TBool  }
@@ -463,37 +464,37 @@ lexComment mc = do
        +-------------+
             Chars
 -}
-strAutomaton :: Int -> LexAction (Maybe Token)
-strAutomaton 0 = do
+strAutomaton :: Char -> Int -> LexAction (Maybe Token)
+strAutomaton c 0 = do
   incWhiteSensitiveCharCount
   alex <- getAlex
   case alexGetByte alex of
     Just (_, newAlex) -> do
       putAlex newAlex
       m <- getMatch
-      if last m == '\''
-      then strAutomaton 1
-      else strAutomaton 0
-    Nothing -> strAutomaton 3
-strAutomaton 1 = do
+      if last m == c
+      then strAutomaton c 1
+      else strAutomaton c 0
+    Nothing -> strAutomaton c 3
+strAutomaton c 1 = do
   incWhiteSensitiveCharCount
   alex <- getAlex
   case alexGetByte alex of
     Just (_, newAlex) -> do
       let m = lexemeMatch . aiLexeme $ newAlex
-      if head m == '\''
+      if head m == c
       then do
         putAlex newAlex
         putMatch $ reverse . tail $ m
-        strAutomaton 0
-      else strAutomaton 2
-    Nothing -> strAutomaton 2
-strAutomaton 2 = do
+        strAutomaton c 0
+      else strAutomaton c 2
+    Nothing -> strAutomaton c 2
+strAutomaton c 2 = do
   s <- getLexemeSpan
   m <- getMatch
   resetWhiteSensitiveCharCount
   return $ Just $ TString s $ (init . tail) m
-strAutomaton 3 = fail "Unmatched string."
+strAutomaton c 3 = fail "Unmatched string."
 
 lexHollerith :: LexAction (Maybe Token)
 lexHollerith = do
