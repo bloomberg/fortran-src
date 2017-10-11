@@ -49,6 +49,7 @@ library
     Language.Fortran.AST
     Language.Fortran.LValue
     Language.Fortran.Intrinsics
+    Language.Fortran.Lexer.BigIronForm
     Language.Fortran.Lexer.FixedForm
     Language.Fortran.Lexer.FreeForm
     Language.Fortran.ParserMonad
@@ -56,6 +57,7 @@ library
     Language.Fortran.Parser.Fortran66
     Language.Fortran.Parser.Fortran77
     Language.Fortran.Parser.Fortran90
+    Language.Fortran.Parser.FortranBigIron
     Language.Fortran.Parser.Utils
     Language.Fortran.PrettyPrint
     Language.Fortran.Transformation.Disambiguation.Function

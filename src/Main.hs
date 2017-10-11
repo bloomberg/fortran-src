@@ -25,6 +25,7 @@ import Data.Generics.Uniplate.Data
 import Language.Fortran.ParserMonad (FortranVersion(..), fromRight)
 import qualified Language.Fortran.Lexer.FixedForm as FixedForm (collectFixedTokens, Token(..))
 import qualified Language.Fortran.Lexer.FreeForm as FreeForm (collectFreeTokens, Token(..))
+import qualified Language.Fortran.Lexer.BigIronForm as BigIronForm (collectFixedTokens, Token(..))
 
 import Language.Fortran.Parser.Any
 
@@ -88,6 +89,8 @@ main = do
           print $ FixedForm.collectFixedTokens version contents
         Lex | version `elem` [Fortran90, Fortran2003, Fortran2008] ->
           print $ FreeForm.collectFreeTokens version contents
+        Lex | version == FortranBigIron ->
+          print $ BigIronForm.collectFixedTokens version contents
         Lex        -> ioError $ userError $ usageInfo programName options
         Parse      -> pp $ parserF mods contents path
         Typecheck  -> printTypes . extractTypeEnv . fst . runInfer $ parserF mods contents path
@@ -263,7 +266,8 @@ instance Read FortranVersion where
                   , ("77", Fortran77)
                   , ("90", Fortran90)
                   , ("03", Fortran2003)
-                  , ("08", Fortran2008)] in
+                  , ("08", Fortran2008)
+                  , ("bigiron", FortranBigIron)] in
       tryTypes options
       where
         tryTypes [] = []

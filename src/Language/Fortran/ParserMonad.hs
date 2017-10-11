@@ -29,6 +29,7 @@ data FortranVersion = Fortran66
                     | Fortran90
                     | Fortran2003
                     | Fortran2008
+                    | FortranBigIron
                     deriving (Ord, Eq, Data, Typeable, Generic)
 
 instance Show FortranVersion where
@@ -38,6 +39,7 @@ instance Show FortranVersion where
   show Fortran90 = "Fortran 90"
   show Fortran2003 = "Fortran 2003"
   show Fortran2008 = "Fortran 2008"
+  show FortranBigIron = "Fortran 77 (Big Iron Edition)"
 
 data ParanthesesCount = ParanthesesCount
   { pcActual :: Integer
