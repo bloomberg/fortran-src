@@ -550,6 +550,26 @@ ARRAY_DECLARATOR :: { Declarator A0 }
 ARRAY_DECLARATOR
 : VARIABLE '(' DIMENSION_DECLARATORS ')'
   { DeclArray () (getTransSpan $1 $4) $1 (aReverse $3) Nothing Nothing }
+| VARIABLE '(' DIMENSION_DECLARATORS ')' '/' SIMPLE_EXPRESSION_LIST '/'
+  { DeclArray () (getTransSpan $1 $7) $1 (aReverse $3) Nothing
+    (Just (ExpInitialisation () (getSpan $6) (fromReverseList $6))) }
+
+SIMPLE_EXPRESSION_LIST :: { [Expression A0] }
+SIMPLE_EXPRESSION_LIST
+: SIMPLE_EXPRESSION_LIST ',' SIMPLE_EXPRESSION  { $3 : $1 }
+| SIMPLE_EXPRESSION { [ $1 ] }
+
+SIMPLE_EXPRESSION :: { Expression A0 }
+SIMPLE_EXPRESSION
+: CONSTANT '*' CONSTANT  { ExpBinary () (getTransSpan $1 $3) Multiplication $1 $3 }
+| CONSTANT { $1 }
+
+CONSTANT :: { Expression A0 }
+CONSTANT
+: VARIABLE { $1 }
+| NUMERIC_LITERAL { $1 }
+| LOGICAL_LITERAL { $1 }
+| STRING { $1 }
 
 VARIABLE_DECLARATOR :: { Declarator A0 }
 VARIABLE_DECLARATOR
@@ -557,7 +577,9 @@ VARIABLE_DECLARATOR
 | VARIABLE '*' EXPRESSION
   { DeclVariable () (getTransSpan $1 $3) $1 (Just $3) Nothing }
 | VARIABLE '*' '(' '*' ')'
-  { DeclVariable () (getTransSpan $1 $3) $1 (Just $ ExpValue () (getSpan $4) ValStar) Nothing }
+  { DeclVariable () (getTransSpan $1 $5) $1 (Just $ ExpValue () (getSpan $4) ValStar) Nothing }
+| VARIABLE '/' EXPRESSION '/'
+  { DeclVariable () (getTransSpan $1 $4) $1 Nothing (Just $3) }
 
 DIMENSION_DECLARATORS :: { AList DimensionDeclarator A0 }
 DIMENSION_DECLARATORS
