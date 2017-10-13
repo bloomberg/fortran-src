@@ -311,8 +311,12 @@ instance Pretty BaseType where
       | otherwise = tooOld v "User defined type" Fortran90
 
 instance Pretty (TypeSpec a) where
-    pprint' v (TypeSpec _ _ baseType mSelector) =
-      pprint' v baseType <+> pprint' v mSelector
+    pprint' v (TypeSpec _ _ baseType mSelector)
+      | v >= Fortran90
+      = pprint' v baseType <+> pprint' v mSelector
+      | otherwise
+      = pprint' v baseType <> pprint' v mSelector
+
 
 instance Pretty (Selector a) where
   pprint' v (Selector _ _ mLenSel mKindSel)
@@ -322,7 +326,7 @@ instance Pretty (Selector a) where
         (Just lenSel, Nothing) ->
           char '*' <+> parens (pprint' Fortran77Extended lenSel)
         (Nothing, Just kindSel) ->
-          char '*' <+> parens (pprint' Fortran77Extended kindSel)
+          char '*' <> pprint' Fortran77Extended kindSel
         _ -> error "Kind and length selectors can be active one at a time in\
                    \Fortran 77."
 
