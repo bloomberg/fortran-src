@@ -739,8 +739,11 @@ instance Pretty (Expression a) where
     pprint' v (ExpImpliedDo _ s es dospec) =
         pprint' v es <> comma <+> pprint' v dospec
 
-    pprint' v (ExpInitialisation _ s es) =
-        "(/" <> pprint' v es <> "/)"
+    pprint' v (ExpInitialisation _ s es)
+      | v == FortranBigIron
+      = "/" <> pprint' v es <> "/"
+      | otherwise
+      = "(/" <> pprint' v es <> "/)"
 
     pprint' v (ExpReturnSpec _ s e) =
         char '*' <> pprint' v e
@@ -778,10 +781,7 @@ instance Pretty (Declarator a) where
 
     pprint' v (DeclVariable _ _ e mLen mInit)
       | v >= Fortran77 =
-        case mInit of
-          Nothing -> pprint' v e <>
-                     char '*' <?> pprint' v mLen
-          _ -> tooOld v "Variable initialisation" Fortran90
+        pprint' v e <> char '*' <?> pprint' v mLen <> pprint' v mInit
 
     pprint' v (DeclVariable _ _ e mLen mInit)
       | Nothing <- mLen
@@ -797,10 +797,7 @@ instance Pretty (Declarator a) where
 
     pprint' v (DeclArray _ _ e dims mLen mInit)
       | v >= Fortran77 =
-        case mInit of
-          Nothing -> pprint' v e <> parens (pprint' v dims) <>
-                     "*" <?> pprint' v mLen
-          _ -> tooOld v "Variable initialisation" Fortran90
+        pprint' v e <> parens (pprint' v dims) <> "*" <?> pprint' v mLen <> pprint' v mInit
     pprint' v (DeclArray _ _ e dims mLen mInit)
       | Nothing <- mLen
       , Nothing <- mInit = pprint' v e <> parens (pprint' v dims)

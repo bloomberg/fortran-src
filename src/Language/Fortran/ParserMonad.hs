@@ -25,21 +25,21 @@ import Language.Fortran.Util.Position
 
 data FortranVersion = Fortran66
                     | Fortran77
+                    | FortranBigIron
                     | Fortran77Extended
                     | Fortran90
                     | Fortran2003
                     | Fortran2008
-                    | FortranBigIron
                     deriving (Ord, Eq, Data, Typeable, Generic)
 
 instance Show FortranVersion where
   show Fortran66 = "Fortran 66"
   show Fortran77 = "Fortran 77"
   show Fortran77Extended = "Fortran 77 Extended"
+  show FortranBigIron = "Fortran 77 (Big Iron Edition)"
   show Fortran90 = "Fortran 90"
   show Fortran2003 = "Fortran 2003"
   show Fortran2008 = "Fortran 2008"
-  show FortranBigIron = "Fortran 77 (Big Iron Edition)"
 
 data ParanthesesCount = ParanthesesCount
   { pcActual :: Integer
