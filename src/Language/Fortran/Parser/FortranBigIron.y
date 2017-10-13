@@ -80,12 +80,12 @@ import Debug.Trace
   external              { TExternal _ }
   dimension             { TDimension _ }
   byte                  { TType _ "byte" }
-  character             { TType _ t | "character" `isPrefixOf` t }
-  integer               { TType _ t | "integer" `isPrefixOf` t }
-  real                  { TType _ t | "real" `isPrefixOf` t }
+  character             { TType _ "character" }
+  integer               { TType _ "integer" }
+  real                  { TType _ "real" }
   doublePrecision       { TType _ "doubleprecision" }
-  logical               { TType _ t | "logical" `isPrefixOf` t }
-  complex               { TType _ t | "complex" `isPrefixOf` t }
+  logical               { TType _ "logical" }
+  complex               { TType _ "complex" }
   doubleComplex         { TType _ "doublecomplex" }
   intrinsic             { TIntrinsic _ }
   implicit              { TImplicit _ }
@@ -810,14 +810,14 @@ LABEL_IN_STATEMENT :: { Expression A0 } : int { ExpValue () (getSpan $1) (let (T
 
 TYPE_SPEC :: { TypeSpec A0 }
 TYPE_SPEC
-: integer KIND_SELECTOR { TypeSpec () (getSpan $1) TypeInteger Nothing }
-| real KIND_SELECTOR { TypeSpec () (getSpan $1) TypeReal Nothing }
+: integer KIND_SELECTOR { TypeSpec () (getSpan $1) TypeInteger $2 }
+| real KIND_SELECTOR { TypeSpec () (getSpan $1) TypeReal $2  }
 | doublePrecision KIND_SELECTOR
-  { TypeSpec () (getSpan $1) TypeDoublePrecision Nothing }
-| logical KIND_SELECTOR { TypeSpec () (getSpan $1) TypeLogical Nothing }
-| complex KIND_SELECTOR { TypeSpec () (getSpan $1) TypeComplex Nothing }
+  { TypeSpec () (getSpan $1) TypeDoublePrecision $2 }
+| logical KIND_SELECTOR { TypeSpec () (getSpan $1) TypeLogical $2 }
+| complex KIND_SELECTOR { TypeSpec () (getSpan $1) TypeComplex $2 }
 | doubleComplex KIND_SELECTOR
-  { TypeSpec () (getSpan $1) TypeDoubleComplex Nothing }
+  { TypeSpec () (getSpan $1) TypeDoubleComplex $2 }
 | character CHAR_SELECTOR { TypeSpec () (getSpan ($1, $2)) TypeCharacter $2 }
 | byte KIND_SELECTOR { TypeSpec () (getSpan ($1, $2)) TypeByte $2 }
 
@@ -843,14 +843,15 @@ BASIC_CHAR_SELECTOR
 
 IMP_TYPE_SPEC :: { TypeSpec A0 }
 IMP_TYPE_SPEC
-: integer          { TypeSpec () (getSpan $1) TypeInteger Nothing }
-| real             { TypeSpec () (getSpan $1) TypeReal Nothing }
-| doublePrecision  { TypeSpec () (getSpan $1) TypeDoublePrecision Nothing }
-| logical          { TypeSpec () (getSpan $1) TypeLogical Nothing }
-| complex          { TypeSpec () (getSpan $1) TypeComplex Nothing }
-| doubleComplex    { TypeSpec () (getSpan $1) TypeDoubleComplex Nothing }
-| character BASIC_CHAR_SELECTOR { TypeSpec () (getSpan ($1, $2)) TypeCharacter $2 }
-| byte             { TypeSpec () (getSpan $1) TypeByte Nothing }
+: TYPE_SPEC  { $1 }
+-- : integer          { TypeSpec () (getSpan $1) TypeInteger Nothing }
+-- | real             { TypeSpec () (getSpan $1) TypeReal Nothing }
+-- | doublePrecision  { TypeSpec () (getSpan $1) TypeDoublePrecision Nothing }
+-- | logical          { TypeSpec () (getSpan $1) TypeLogical Nothing }
+-- | complex          { TypeSpec () (getSpan $1) TypeComplex Nothing }
+-- | doubleComplex    { TypeSpec () (getSpan $1) TypeDoubleComplex Nothing }
+-- | character BASIC_CHAR_SELECTOR { TypeSpec () (getSpan ($1, $2)) TypeCharacter $2 }
+-- | byte             { TypeSpec () (getSpan $1) TypeByte Nothing }
 
 STAR :: { Expression A0 }
 STAR : '*' { ExpValue () (getSpan $1) ValStar }

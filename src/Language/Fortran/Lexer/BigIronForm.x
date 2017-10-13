@@ -53,13 +53,6 @@ $special = [\ \=\+\-\*\/\(\)\,\.\$]
 @datatype = "integer" | "real" | "doubleprecision" | "complex" | "logical"
           -- BigIron extensions
           | "byte"
-          | "integer*2" | "integer*4" | "integer*8"
-          | "logical*1" | "logical*2" | "logical*4" | "logical*8"
-          | "real*4" | "real*8" | "real*16"
-          | "complex*8" | "complex*16" | "complex*32"
-
-@characterLength = "*" $digit+
-@character = "character" @characterLength?
 
 -- Numbers
 @integerConst = $digit+ -- Integer constant
@@ -84,9 +77,9 @@ tokens :-
   <0,st,keyword,iif> \n                       { resetPar >> toSC 0 >> addSpan TNewline }
   <0,st,keyword,iif> \r                       ;
 
-  <st> "("                                    { addSpan TLeftPar }
+  <st,keyword> "("                            { addSpan TLeftPar }
   <iif> "("                                   { incPar >> addSpan TLeftPar }
-  <st> ")"                                    { addSpan TRightPar }
+  <st,keyword> ")"                            { typeSCChange >> addSpan TRightPar }
   <iif> ")"                                   { maybeToKeyword >> addSpan TRightPar }
   <st,iif> "(/" / { formatExtendedP }         { addSpan TLeftArrayPar }
   <st,iif> "/)" / { formatExtendedP }         { addSpan TRightArrayPar }
@@ -155,8 +148,7 @@ tokens :-
   <st> @datatype / { implicitStP }            { addSpanAndMatch TType }
   <keyword> "doublecomplex" / { extended77P } { typeSCChange >> addSpanAndMatch TType }
   <st> "doublecomplex" / { implicitTypeExtendedP }  { addSpanAndMatch TType }
-  <keyword> "character" / { fortran77P }      { toSC st >> addSpanAndMatch TType }
-  <keyword> @character / { bigIronP }         { typeSCChange >> addSpanAndMatch TType }
+  <keyword> "character" / { fortran77P }      { typeSCChange >> addSpanAndMatch TType }
   <st> "character" / { implicitType77P }      { addSpanAndMatch TType }
   <keyword> "implicit" / { fortran77P }       { toSC st >> addSpan TImplicit  }
   <st> "none" / { fortran77P }                { addSpan TNone  }
@@ -175,7 +167,9 @@ tokens :-
   -- Tokens needed to parse integers, reals, double precision and complex
   -- constants
   <st,iif> @exponent / { exponentP }          { addSpanAndMatch TExponent }
-  <st,iif,keyword> @integerConst              { addSpanAndMatch TInt }
+  <st,iif> @integerConst                      { addSpanAndMatch TInt }
+    -- can be part (end) of function type declaration
+  <keyword> @integerConst                     { typeSCChange >> addSpanAndMatch TInt }
   <st,iif,keyword> @bozLiteralConst           { addSpanAndMatch TBozIntBI }
 
   -- String
@@ -189,7 +183,8 @@ tokens :-
   <st,iif> "+"                                { addSpan TOpPlus  }
   <st,iif> "-"                                { addSpan TOpMinus  }
   <st,iif> "**"                               { addSpan TOpExp  }
-  <st,iif> "*"                                { addSpan TStar  }
+    -- can be part of function type declaration
+  <st,iif,keyword> "*"                        { addSpan TStar  }
   <st,iif> "/"                                { addSpan TSlash  }
 
   -- Logical operators
@@ -557,6 +552,8 @@ typeSCChange = do
   else toSC st
   where
     f TFunction{} = return True
+      -- can be part of function type declaration
+    f TStar{} = return True
     f _ = return False
 
 toSC :: Int -> LexAction (Maybe Token)
