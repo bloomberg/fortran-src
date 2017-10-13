@@ -394,6 +394,16 @@ resetWhiteSensitiveCharCount = do
   ai <- getAlex
   putAlex $ ai { aiWhiteSensitiveCharCount = 0 }
 
+setCaseSensitive :: LexAction ()
+setCaseSensitive = do
+  ai <- getAlex
+  putAlex $ ai { aiCaseSensitive = True }
+
+setCaseInsensitive :: LexAction ()
+setCaseInsensitive = do
+  ai <- getAlex
+  putAlex $ ai { aiCaseSensitive = False }
+
 instance Spanned Lexeme where
   getSpan lexeme =
     let ms = lexemeStart lexeme
@@ -470,6 +480,7 @@ lexComment mc = do
 -}
 strAutomaton :: Char -> Int -> LexAction (Maybe Token)
 strAutomaton c 0 = do
+  setCaseSensitive
   incWhiteSensitiveCharCount
   alex <- getAlex
   case alexGetByte alex of
@@ -497,6 +508,7 @@ strAutomaton c 2 = do
   s <- getLexemeSpan
   m <- getMatch
   resetWhiteSensitiveCharCount
+  setCaseInsensitive
   return $ Just $ TString s $ (init . tail) m
 strAutomaton c 3 = fail "Unmatched string."
 
@@ -680,6 +692,7 @@ data AlexInput = AlexInput
   , aiStartCode                 :: Int
   , aiPreviousToken             :: Maybe Token
   , aiPreviousTokensInLine      :: [ Token ]
+  , aiCaseSensitive             :: Bool
   } deriving (Show)
 
 instance Loc AlexInput where
@@ -701,7 +714,9 @@ vanillaAlexInput = AlexInput
   , aiWhiteSensitiveCharCount = 6
   , aiStartCode = 0
   , aiPreviousToken = Nothing
-  , aiPreviousTokensInLine = [ ] }
+  , aiPreviousTokensInLine = [ ]
+  , aiCaseSensitive = False
+  }
 
 updateLexeme :: Maybe Char -> Position -> AlexInput -> AlexInput
 updateLexeme maybeChar p ai =
@@ -709,7 +724,7 @@ updateLexeme maybeChar p ai =
       match = lexemeMatch lexeme
       newMatch =
         case maybeChar of
-          Just c -> toLower c : match
+          Just c -> c : match
           Nothing -> match
       start = lexemeStart lexeme
       newStart = if isNothing start then Just p else start
@@ -734,7 +749,7 @@ alexGetByte ai
   | _curChar `elem` [ ' ', '\t' ] && _isWhiteInsensitive = skip Char ai
   -- Read genuine character and advance. Also covers white sensitivity.
   | otherwise =
-      let (_b:_bs) = (utf8Encode . toLower) _curChar in
+      let (_b:_bs) = utf8Encode _curChar in
         Just(_b, updateLexeme (Just _curChar) _position
           ai {
             aiPosition =
@@ -749,7 +764,7 @@ alexGetByte ai
               else aiWhiteSensitiveCharCount ai - 1
           })
   where
-    _curChar = currentChar ai
+    _curChar = (if aiCaseSensitive ai then id else toLower) $ currentChar ai
     _bytes = aiBytes ai
     _position = aiPosition ai
     _isWhiteInsensitive = aiWhiteSensitiveCharCount ai == 0
