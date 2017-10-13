@@ -22,12 +22,13 @@ import Data.Data
 import Data.Binary
 import Data.Generics.Uniplate.Data
 
-import Language.Fortran.ParserMonad (FortranVersion(..), fromRight)
+import Language.Fortran.ParserMonad (fromParseResult, FortranVersion(..), fromRight)
 import qualified Language.Fortran.Lexer.FixedForm as FixedForm (collectFixedTokens, Token(..))
 import qualified Language.Fortran.Lexer.FreeForm as FreeForm (collectFreeTokens, Token(..))
 import qualified Language.Fortran.Lexer.BigIronForm as BigIronForm (collectFixedTokens, Token(..))
 
 import Language.Fortran.Parser.Any
+import Language.Fortran.Parser.FortranBigIron (bigIronParserWithIncludes)
 
 import Language.Fortran.Util.ModFile
 
@@ -65,12 +66,18 @@ main = do
 
     ([path], actionOpt) -> do
       let path = head parsedArgs
+      let idirs = includeDirs opts
       contents <- flexReadFile path
       let version = fromMaybe (deduceVersion path) (fortranVersion opts)
       let (Just parserF0) = lookup version parserWithModFilesVersions
-      let parserF = \m b s -> fromRight (parserF0 m b s)
+      let parserF = case version of
+            FortranBigIron ->
+              \_ b s -> fromRight . fromParseResult <$> bigIronParserWithIncludes idirs b s
+            _ ->
+              \m b s -> return $ fromRight (parserF0 m b s)
       let outfmt = outputFormat opts
-      mods <- decodeModFiles $ includeDirs opts
+      -- mods <- decodeModFiles $ includeDirs opts
+      mods <- decodeModFiles [] --- $ includeDirs opts
       let mmap = combinedModuleMap mods
       let tenv = combinedTypeEnv mods
 
@@ -92,12 +99,12 @@ main = do
         Lex | version == FortranBigIron ->
           print $ BigIronForm.collectFixedTokens version contents
         Lex        -> ioError $ userError $ usageInfo programName options
-        Parse      -> pp $ parserF mods contents path
-        Typecheck  -> printTypes . extractTypeEnv . fst . runInfer $ parserF mods contents path
-        Rename     -> pp . runRenamer $ parserF mods contents path
-        BBlocks    -> putStrLn . runBBlocks $ parserF mods contents path
-        SuperGraph -> putStrLn . runSuperGraph $ parserF mods contents path
-        Reprint    -> putStrLn . render . flip (pprint version) (Just 0) $ parserF mods contents path
+        Parse      -> pp =<< parserF mods contents path
+        Typecheck  -> printTypes . extractTypeEnv . fst . runInfer =<< parserF mods contents path
+        Rename     -> pp . runRenamer =<< parserF mods contents path
+        BBlocks    -> putStrLn . runBBlocks =<< parserF mods contents path
+        SuperGraph -> putStrLn . runSuperGraph =<< parserF mods contents path
+        Reprint    -> putStrLn . render . flip (pprint version) (Just 0) =<< parserF mods contents path
 
     _ -> fail $ usageInfo programName options
 

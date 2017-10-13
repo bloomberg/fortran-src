@@ -441,7 +441,7 @@ lexComment mc = do
   alex <- getAlex
   let modifiedAlex = alex { aiWhiteSensitiveCharCount = 1 }
   case mc of
-    Just '\n' -> return Nothing -- $ Just $ TComment s $ tail m
+    Just '\n' -> return Nothing --- $ Just $ TComment s $ tail m
     Just _ ->
       case alexGetByte modifiedAlex of
         Just (_, newAlex) -> do
@@ -451,7 +451,7 @@ lexComment mc = do
     Nothing ->
       case alexGetByte modifiedAlex of
         Just (_, newAlex) -> lexComment (Just $ (head . lexemeMatch . aiLexeme) newAlex)
-        Nothing -> return Nothing -- $ Just $ TComment s $ tail m
+        Nothing -> return Nothing --- $ Just $ TComment s $ tail m
 
 
 {-

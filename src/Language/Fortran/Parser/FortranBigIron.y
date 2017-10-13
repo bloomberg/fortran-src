@@ -3,8 +3,10 @@
 module Language.Fortran.Parser.FortranBigIron
   ( expressionParser
   , statementParser
+  , includeParser
   , bigIronParser
   , bigIronParserWithModFiles
+  , bigIronParserWithIncludes
   ) where
 
 import Prelude hiding (EQ,LT,GT) -- Same constructors exist in the AST
@@ -20,11 +22,17 @@ import Language.Fortran.Lexer.BigIronForm
 import Language.Fortran.Transformer
 import Language.Fortran.AST
 
+import Data.Generics.Uniplate.Operations
+import System.Directory
+import System.FilePath
+import Control.Exception
+
 import Debug.Trace
 
 }
 
 %name programParser PROGRAM
+%name includeParser INCLUDES
 %name statementParser STATEMENT
 %name expressionParser EXPRESSION
 %monad { LexAction }
@@ -173,6 +181,10 @@ MAYBE_ARGUMENTS :: { Maybe (AList Expression A0) }
 | {- Nothing -} { Nothing }
 
 NAME :: { Name } : id { let (TId _ name) = $1 in name }
+
+INCLUDES :: { [ Block A0 ] }
+INCLUDES
+: NEWLINE BLOCKS { $2 }
 
 BLOCKS :: { [ Block A0 ] }
 BLOCKS
@@ -409,7 +421,7 @@ NONEXECUTABLE_STATEMENT
   { StParameter () (getTransSpan $1 $4) $ fromReverseList $3 }
 | entry VARIABLE { StEntry () (getTransSpan $1 $2) $2 Nothing Nothing }
 | entry VARIABLE ENTRY_ARGS { StEntry () (getTransSpan $1 $3) $2 (Just $3) Nothing }
-| include STRING { StInclude () (getTransSpan $1 $2) $2 }
+| include STRING { StInclude () (getTransSpan $1 $2) $2 Nothing }
 
 ENTRY_ARGS :: { AList Expression A0 }
 ENTRY_ARGS
@@ -890,6 +902,40 @@ bigIronParserWithModFiles mods sourceCode filename =
   where
     transform = transformWithModFiles mods transformations
     parseState = initParseState sourceCode FortranBigIron filename
+
+bigIronParserWithIncludes ::
+  [String] -> B.ByteString -> String -> IO (ParseResult AlexInput Token (ProgramFile A0))
+bigIronParserWithIncludes incs bs fp = case bigIronParserWithModFiles emptyModFiles bs fp of
+  ParseFailed e -> return (ParseFailed e)
+  ParseOk p x -> do
+    p' <- descendBiM (inlineInclude incs) p
+    return (ParseOk p' x)
+
+bigIronIncludeParser ::
+    B.ByteString -> String -> ParseResult AlexInput Token [Block A0]
+bigIronIncludeParser sourceCode filename =
+    runParse includeParser parseState
+  where
+    parseState = initParseState sourceCode FortranBigIron filename
+
+inlineInclude :: [String] -> Statement A0 -> IO (Statement A0)
+inlineInclude dirs st = case st of
+  StInclude a s e@(ExpValue _ _ (ValString path)) Nothing -> do
+    inc <- readInDirs dirs path
+    case bigIronIncludeParser inc path of
+      ParseOk blocks _ -> return $ StInclude a s e (Just blocks)
+      ParseFailed e -> throwIO e
+  _ -> return st
+
+readInDirs :: [String] -> String -> IO B.ByteString
+readInDirs [] f = fail $ "cannot find file: " ++ f
+readInDirs (d:ds) f = do
+  print (d</>f)
+  b <- doesFileExist (d</>f)
+  if b then
+    B.readFile (d</>f)
+  else
+    readInDirs ds f
 
 parseError :: Token -> LexAction a
 parseError _ = do
