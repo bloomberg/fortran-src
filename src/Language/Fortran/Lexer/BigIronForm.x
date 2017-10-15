@@ -69,7 +69,7 @@ $special = [\ \=\+\-\*\/\(\)\,\.\$]
 tokens :-
 
   <0> [c!\*d] / { commentP }                  { lexComment Nothing }
-  "!" / { commentP }                          { lexComment Nothing }
+  "!" / { bangCommentP }                      { lexComment Nothing }
   <0> @label / { withinLabelColsP }           { addSpanAndMatch TLabel }
   <0> . / { \_ ai _ _ -> atColP 6 ai }        { toSC keyword }
   <0> " "                                     ;
@@ -305,7 +305,12 @@ equalFollowsP fv ai =
         _ -> lexer $ f True n
 
 commentP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
-commentP _ aiOld _ aiNew = {- atColP 1 aiOld && -} _endsWithLine
+commentP _ aiOld _ aiNew = atColP 1 aiOld && _endsWithLine
+  where
+    _endsWithLine = (posColumn . aiPosition) aiNew /= 1
+
+bangCommentP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
+bangCommentP _ aiOld _ aiNew = _endsWithLine
   where
     _endsWithLine = (posColumn . aiPosition) aiNew /= 1
 
@@ -732,7 +737,7 @@ updateLexeme maybeChar p ai =
 -- Definitions needed for alexScanUser
 --------------------------------------------------------------------------------
 
-data Move = Continuation | Char | Newline
+data Move = Continuation | Char | Newline | NewlineComment
 
 alexGetByte :: AlexInput -> Maybe (Word8, AlexInput)
 alexGetByte ai
@@ -742,6 +747,8 @@ alexGetByte ai
   | posAbsoluteOffset _position == aiEndOffset ai = Nothing
   -- Skip the continuation line altogether
   | isContinuation ai && _isWhiteInsensitive = skip Continuation ai
+  -- Skip the newline before a comment
+  | isNewlineComment ai = skip NewlineComment ai
   -- If we are not parsing a Hollerith skip whitespace
   | _curChar `elem` [ ' ', '\t' ] && _isWhiteInsensitive = skip Char ai
   -- Read genuine character and advance. Also covers white sensitivity.
@@ -751,8 +758,8 @@ alexGetByte ai
           ai {
             aiPosition =
               case _curChar of
-                '\n'  -> advance Newline _position
-                _     -> advance Char _position,
+                '\n'  -> advance Newline ai
+                _     -> advance Char ai,
             aiBytes = _bs,
             aiPreviousChar = _curChar,
             aiWhiteSensitiveCharCount =
@@ -784,13 +791,22 @@ isContinuation ai =
   where
     _next7 = takeNChars 7 ai
 
+isNewlineComment :: AlexInput -> Bool
+isNewlineComment ai =
+  take 1 _next2 == "\n" && (isCommentLine || isBlankLine)
+  where
+    _next2 = takeNChars 2 ai
+    isCommentLine = toLower (last _next2) `elem` "c!*d"
+                   -- eof is not blank line
+    isBlankLine = length _next2 == 2 && last _next2 == '\n'
+
 skip :: Move -> AlexInput -> Maybe (Word8, AlexInput)
 skip move ai =
-  let _newPosition = advance move $ aiPosition ai in
+  let _newPosition = advance move ai in
     alexGetByte $ updateLexeme Nothing _newPosition $ ai { aiPosition = _newPosition }
 
-advance :: Move -> Position -> Position
-advance move position =
+advance :: Move -> AlexInput -> Position
+advance move ai =
   case move of
     Char ->
       position { posAbsoluteOffset = _absl + 1, posColumn = _col + 1 }
@@ -798,10 +814,46 @@ advance move position =
       position { posAbsoluteOffset = _absl + 7, posColumn = 7, posLine = _line + 1 }
     Newline ->
       position { posAbsoluteOffset = _absl + 1, posColumn = 1, posLine = _line + 1 }
+    NewlineComment -> --- traceShowId $
+      skipCommentLines ai
+        position { posAbsoluteOffset = _absl + 1, posColumn = 1, posLine = _line + 1 }
   where
+    position = aiPosition ai
     _col = posColumn position
     _line = posLine position
     _absl = posAbsoluteOffset position
+
+
+skipCommentLines :: AlexInput -> Position -> Position
+skipCommentLines ai p = go p p
+  where
+  go p' p
+    --- | traceShow (p, line) False = undefined
+    | map toLower (take 1 line) `elem` ["c", "d", "!", "*"]
+      || all (`elem` " \t") line
+      -- eof is not blank
+    , length line > 0
+    = go p p{ posAbsoluteOffset = posAbsoluteOffset p + length line + 1
+            , posColumn = 1, posLine = posLine p + 1
+            }
+    | isContinuation ai'
+    = advance Continuation ai'
+    | otherwise
+      -- after skipping comment lines, place cursor right at the last newline
+    = p2
+    where
+    line = takeLine p ai
+    line' = takeLine p' ai
+    p2 = p' { posAbsoluteOffset = posAbsoluteOffset p' + length line'
+            , posColumn = length line'
+            }
+    ai' = ai { aiPosition = p2 }
+
+  takeLine :: Position -> AlexInput -> String
+  takeLine p ai =
+    B.unpack . B.takeWhile (/='\n') . B.drop (fromIntegral _dropN) $ aiSourceBytes ai
+    where
+      _dropN = posAbsoluteOffset p
 
 utf8Encode :: Char -> [Word8]
 utf8Encode = map fromIntegral . _go . ord

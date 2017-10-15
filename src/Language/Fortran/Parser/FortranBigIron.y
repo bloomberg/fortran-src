@@ -184,7 +184,8 @@ NAME :: { Name } : id { let (TId _ name) = $1 in name }
 
 INCLUDES :: { [ Block A0 ] }
 INCLUDES
-: NEWLINE BLOCKS { $2 }
+: NEWLINE BLOCKS { reverse $2 }
+| BLOCKS { reverse $1 }
 
 BLOCKS :: { [ Block A0 ] }
 BLOCKS
@@ -450,7 +451,7 @@ PARAMETER_ASSIGNMENT
 
 DECLARATION_STATEMENT :: { Statement A0 }
 DECLARATION_STATEMENT
-: TYPE_SPEC DECLARATORS { StDeclaration () (getTransSpan $1 $2) $1 Nothing $2 }
+: TYPE_SPEC DECLARATORS { StDeclaration () (getTransSpan $1 $2) $1 Nothing (aReverse $2) }
 
 IMP_LISTS :: { AList ImpList A0 }
 IMP_LISTS
@@ -565,6 +566,11 @@ ARRAY_DECLARATOR
 | VARIABLE '(' DIMENSION_DECLARATORS ')' '/' SIMPLE_EXPRESSION_LIST '/'
   { DeclArray () (getTransSpan $1 $7) $1 (aReverse $3) Nothing
     (Just (ExpInitialisation () (getSpan $6) (fromReverseList $6))) }
+| VARIABLE '*' CONSTANT '(' DIMENSION_DECLARATORS ')'
+  { DeclArray () (getTransSpan $1 $6) $1 (aReverse $5) (Just $3) Nothing }
+| VARIABLE '*' CONSTANT '(' DIMENSION_DECLARATORS ')' '/' SIMPLE_EXPRESSION_LIST '/'
+  { DeclArray () (getTransSpan $1 $9) $1 (aReverse $5) (Just $3)
+    (Just (ExpInitialisation () (getSpan $8) (fromReverseList $8))) }
 
 SIMPLE_EXPRESSION_LIST :: { [Expression A0] }
 SIMPLE_EXPRESSION_LIST
