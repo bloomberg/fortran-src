@@ -463,6 +463,8 @@ lexComment mc = do
     Just '\n' -> return Nothing --- $ Just $ TComment s $ tail m
     Just _ ->
       case alexGetByte modifiedAlex of
+        Just (w, _) | fromIntegral w == ord '\n' -> do
+          return Nothing --- $ Just $ TComment s $ tail m
         Just (_, newAlex) -> do
           putAlex newAlex
           lexComment Nothing
@@ -762,11 +764,11 @@ alexGetByte ai
   -- When all characters are already read
   | posAbsoluteOffset _position == aiEndOffset ai = Nothing
   -- Skip the continuation line altogether
-  | isContinuation ai && _isWhiteInsensitive = skip Continuation ai
+  | _isWhiteInsensitive && isContinuation ai = skip Continuation ai
   -- Skip the newline before a comment
-  | isNewlineComment ai = skip NewlineComment ai
+  | _isWhiteInsensitive && isNewlineComment ai = skip NewlineComment ai
   -- If we are not parsing a Hollerith skip whitespace
-  | _curChar `elem` [ ' ', '\t' ] && _isWhiteInsensitive = skip Char ai
+  | _isWhiteInsensitive && _curChar `elem` [ ' ', '\t' ] = skip Char ai
   -- Read genuine character and advance. Also covers white sensitivity.
   | otherwise =
       let (_b:_bs) = utf8Encode _curChar in
@@ -809,12 +811,10 @@ isContinuation ai =
 
 isNewlineComment :: AlexInput -> Bool
 isNewlineComment ai =
-  take 1 _next2 == "\n" && (isCommentLine || isBlankLine)
+  _next1 == "\n" && isCommentLine ai p
   where
-    _next2 = takeNChars 2 ai
-    isCommentLine = toLower (last _next2) `elem` "c!*d"
-                   -- eof is not blank line
-    isBlankLine = length _next2 == 2 && last _next2 == '\n'
+    _next1 = takeNChars 1 ai
+    p = (aiPosition ai) { posAbsoluteOffset = posAbsoluteOffset (aiPosition ai) + 1 }
 
 skip :: Move -> AlexInput -> Maybe (Word8, AlexInput)
 skip move ai =
@@ -845,10 +845,9 @@ skipCommentLines ai p = go p p
   where
   go p' p
     --- | traceShow (p, line) False = undefined
-    | map toLower (take 1 line) `elem` ["c", "d", "!", "*"]
-      || all (`elem` " \t") line
-      -- eof is not blank
-    , length line > 0
+    -- eof is not a comment line
+    | not (null line)
+    , isCommentLine ai p
     = go p p{ posAbsoluteOffset = posAbsoluteOffset p + length line + 1
             , posColumn = 1, posLine = posLine p + 1
             }
@@ -865,11 +864,22 @@ skipCommentLines ai p = go p p
             }
     ai' = ai { aiPosition = p2 }
 
-  takeLine :: Position -> AlexInput -> String
-  takeLine p ai =
-    B.unpack . B.takeWhile (/='\n') . B.drop (fromIntegral _dropN) $ aiSourceBytes ai
+isCommentLine :: AlexInput -> Position -> Bool
+isCommentLine ai p
+    | map toLower (take 1 line) `elem` ["c", "d", "!", "*"]
+      || all (`elem` " \t") line
+      || head (dropWhile (`elem` " \t") line) == '!'
+    = True
+    | otherwise
+    = False
     where
-      _dropN = posAbsoluteOffset p
+    line = takeLine p ai
+
+takeLine :: Position -> AlexInput -> String
+takeLine p ai =
+  B.unpack . B.takeWhile (/='\n') . B.drop (fromIntegral _dropN) $ aiSourceBytes ai
+  where
+    _dropN = posAbsoluteOffset p
 
 utf8Encode :: Char -> [Word8]
 utf8Encode = map fromIntegral . _go . ord
