@@ -86,7 +86,7 @@ tokens :-
   <st,iif> "(/" / { formatExtendedP }         { addSpan TLeftArrayPar }
   <st,iif> "/)" / { formatExtendedP }         { addSpan TRightArrayPar }
   <st,iif,keyword> ","                        { addSpan TComma }
-  <st,iif> "."                                { addSpan TDot }
+  <st,iif,keyword> "."                        { addSpan TDot }
   <st,iif> ":" / { fortran77P }               { addSpan TColon }
 
   <keyword> @id / { idP }                     { toSC st >> addSpanAndMatch TId }
@@ -112,7 +112,7 @@ tokens :-
   -- Tokens related to control statements
   <keyword> "goto"                            { toSC st >> addSpan TGoto  }
   <keyword> "if"                              { toSC iif >> addSpan TIf  }
-  <st> "if" / { fortran77P }                  { toSC iif >> addSpan TIf  }
+  -- <st> "if" / { fortran77P }                  { toSC iif >> addSpan TIf  }
   <st,keyword> "then" / { fortran77P }        { toSC keyword >> addSpan TThen  }
   <keyword> "else" / {fortran77P }            { addSpan TElse  }
   <keyword> "elseif" / {fortran77P }          { toSC st >> addSpan TElsif  }
@@ -256,7 +256,7 @@ extendedIdP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
 extendedIdP fv a b ai = fv `elem` [Fortran77Extended, FortranBigIron] && idP fv a b ai
 
 idP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
-idP fv _ _ ai = not (doP fv ai) && equalFollowsP fv ai
+idP fv _ _ ai = not (doP fv ai) && not (ifP fv ai) && equalFollowsP fv ai
 
 doP :: FortranVersion -> AlexInput -> Bool
 doP fv ai = isPrefixOf "do" (reverse . lexemeMatch . aiLexeme $ ai) &&
@@ -277,6 +277,9 @@ doP fv ai = isPrefixOf "do" (reverse . lexemeMatch . aiLexeme $ ai) &&
         TComma{} -> return True
         _ -> lexer f
 
+ifP :: FortranVersion -> AlexInput -> Bool
+ifP fv ai = isPrefixOf "if" (reverse . lexemeMatch . aiLexeme $ ai)
+
 equalFollowsP :: FortranVersion -> AlexInput -> Bool
 equalFollowsP fv ai =
     case unParse (lexer $ f False 0) ps of
@@ -295,10 +298,14 @@ equalFollowsP fv ai =
         TEOF{} -> return False
         TOpAssign{} -> return True
         TLeftPar{} -> lexer $ f True 1
+        TDot{} -> lexer $ f False 0
+        TId{} -> lexer $ f False 0
         _ -> return False
     f True 0 t =
       case t of
         TOpAssign{} -> return True
+        TDot{} -> lexer $ f True 0
+        TId{} -> lexer $ f True 0
         _ -> return False
     f True n t =
       case t of

@@ -503,6 +503,12 @@ IMP_ELEMENT
 
 ELEMENT :: { Expression A0 }
 ELEMENT
+: ELEMENT '.' ELEMENT_SEGMENT
+  { ExpDataRef () (getTransSpan $1 $3) $1 $3 }
+| ELEMENT_SEGMENT { $1 }
+
+ELEMENT_SEGMENT :: { Expression A0 }
+ELEMENT_SEGMENT
 : VARIABLE { $1 }
 | SUBSCRIPT { $1 }
 
@@ -675,8 +681,9 @@ EXPRESSION
 | STRING                            { $1 }
 -- There should be FUNCTION_CALL here but as far as the parser is concerned it is same as SUBSCRIPT,
 -- hence putting it here would cause a reduce/reduce conflict.
-| SUBSCRIPT                         { $1 }
-| VARIABLE                          { $1 }
+--- | SUBSCRIPT                         { $1 }
+--- | VARIABLE                          { $1 }
+| ELEMENT                           { $1 }
 | IMPLIED_DO                        { $1 }
 | '(/' EXPRESSION_LIST '/)' {
     let { exps = reverse $2;
