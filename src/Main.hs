@@ -72,7 +72,7 @@ main = do
       let (Just parserF0) = lookup version parserWithModFilesVersions
       let parserF = case version of
             FortranBigIron ->
-              \_ b s -> fromRight . fromParseResult <$> bigIronParserWithIncludes idirs b s
+              \_ b s -> fromRight . fromParseResult <$> bigIronParserWithIncludes (".":idirs) b s
             _ ->
               \m b s -> return $ fromRight (parserF0 m b s)
       let outfmt = outputFormat opts

@@ -947,7 +947,9 @@ inlineInclude dirs st = case st of
   StInclude a s e@(ExpValue _ _ (ValString path)) Nothing -> do
     inc <- readInDirs dirs path
     case bigIronIncludeParser inc path of
-      ParseOk blocks _ -> return $ StInclude a s e (Just blocks)
+      ParseOk blocks _ -> do
+        blocks' <- descendBiM (inlineInclude dirs) blocks
+        return $ StInclude a s e (Just blocks')
       ParseFailed e -> throwIO e
   _ -> return st
 
