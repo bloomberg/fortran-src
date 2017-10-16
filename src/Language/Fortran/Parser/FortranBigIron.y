@@ -594,6 +594,11 @@ ARRAY_DECLARATOR
 | VARIABLE '*' CONSTANT '(' DIMENSION_DECLARATORS ')' '/' SIMPLE_EXPRESSION_LIST '/'
   { DeclArray () (getTransSpan $1 $9) $1 (aReverse $5) (Just $3)
     (Just (ExpInitialisation () (getSpan $8) (fromReverseList $8))) }
+| VARIABLE '(' DIMENSION_DECLARATORS ')' '*' CONSTANT
+  { DeclArray () (getTransSpan $1 $6) $1 (aReverse $3) (Just $6) Nothing }
+| VARIABLE '(' DIMENSION_DECLARATORS ')' '*' CONSTANT '/' SIMPLE_EXPRESSION_LIST '/'
+  { DeclArray () (getTransSpan $1 $9) $1 (aReverse $3) (Just $6)
+    (Just (ExpInitialisation () (getSpan $8) (fromReverseList $8))) }
 
 SIMPLE_EXPRESSION_LIST :: { [Expression A0] }
 SIMPLE_EXPRESSION_LIST
