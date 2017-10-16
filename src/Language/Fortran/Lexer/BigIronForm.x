@@ -306,6 +306,7 @@ equalFollowsP fv ai =
         TOpAssign{} -> return True
         TDot{} -> lexer $ f True 0
         TId{} -> lexer $ f True 0
+        TLeftPar{} -> lexer $ f True 1
         _ -> return False
     f True n t =
       case t of
