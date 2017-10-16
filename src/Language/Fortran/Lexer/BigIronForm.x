@@ -258,7 +258,8 @@ extendedIdP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
 extendedIdP fv a b ai = fv `elem` [Fortran77Extended, FortranBigIron] && idP fv a b ai
 
 idP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
-idP fv _ _ ai = not (doP fv ai) && not (ifP fv ai) && equalFollowsP fv ai
+idP fv _ _ ai = not (doP fv ai) && not (ifP fv ai)
+             && (equalFollowsP fv ai || rParFollowsP fv ai)
 
 doP :: FortranVersion -> AlexInput -> Bool
 doP fv ai = isPrefixOf "do" (reverse . lexemeMatch . aiLexeme $ ai) &&
@@ -317,6 +318,23 @@ equalFollowsP fv ai =
         TLeftPar{} -> lexer $ f True (n + 1)
         TRightPar{} -> lexer $ f True (n - 1)
         _ -> lexer $ f True n
+
+rParFollowsP :: FortranVersion -> AlexInput -> Bool
+rParFollowsP fv ai =
+    case unParse (lexer $ f) ps of
+      ParseOk True _ -> True
+      _ -> False
+  where
+    ps = ParseState
+      { psAlexInput = ai { aiStartCode = st}
+      , psVersion = fv
+      , psFilename = "<unknown>"
+      , psParanthesesCount = ParanthesesCount 0 False
+      , psContext = [ ConStart ] }
+    f t =
+      case t of
+        TRightPar{} -> return True
+        _ -> return False
 
 commentP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
 commentP _ aiOld _ aiNew = atColP 1 aiOld && _endsWithLine
