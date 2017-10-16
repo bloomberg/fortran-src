@@ -200,12 +200,12 @@ tokens :-
   <st,iif> ".neqv." / { fortran77P }          { addSpan TOpNotEquivalent  }
 
   -- Relational operators
-  <st,iif> "<" / { extended77P }              { addSpan TOpLT  }
-  <st,iif> "<=" / { extended77P }             { addSpan TOpLE  }
-  <st,iif> "==" / { extended77P }             { addSpan TOpEQ  }
-  <st,iif> "!=" / { extended77P }             { addSpan TOpNE  }
-  <st,iif> ">" / { extended77P }              { addSpan TOpGT  }
-  <st,iif> ">=" / { extended77P }             { addSpan TOpGE  }
+  -- <st,iif> "<" / { extended77P }              { addSpan TOpLT  }
+  -- <st,iif> "<=" / { extended77P }             { addSpan TOpLE  }
+  -- <st,iif> "==" / { extended77P }             { addSpan TOpEQ  }
+  -- <st,iif> "!=" / { extended77P }             { addSpan TOpNE  }
+  -- <st,iif> ">" / { extended77P }              { addSpan TOpGT  }
+  -- <st,iif> ">=" / { extended77P }             { addSpan TOpGE  }
   <st,iif> ".lt."                             { addSpan TOpLT  }
   <st,iif> ".le."                             { addSpan TOpLE  }
   <st,iif> ".eq."                             { addSpan TOpEQ  }
