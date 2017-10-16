@@ -936,7 +936,7 @@ inlineInclude dirs st = case st of
 readInDirs :: [String] -> String -> IO B.ByteString
 readInDirs [] f = fail $ "cannot find file: " ++ f
 readInDirs (d:ds) f = do
-  print (d</>f)
+  -- print (d</>f)
   b <- doesFileExist (d</>f)
   if b then
     B.readFile (d</>f)
