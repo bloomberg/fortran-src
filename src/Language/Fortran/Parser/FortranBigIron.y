@@ -53,6 +53,8 @@ import Debug.Trace
   function              { TFunction _ }
   subroutine            { TSubroutine _ }
   blockData             { TBlockData _ }
+  structure             { TStructure _ }
+  record                { TRecord _ }
   end                   { TEnd _ }
   '='                   { TOpAssign _ }
   assign                { TAssign _ }
@@ -423,6 +425,21 @@ NONEXECUTABLE_STATEMENT
 | entry VARIABLE { StEntry () (getTransSpan $1 $2) $2 Nothing Nothing }
 | entry VARIABLE ENTRY_ARGS { StEntry () (getTransSpan $1 $3) $2 (Just $3) Nothing }
 | include STRING { StInclude () (getTransSpan $1 $2) $2 Nothing }
+| structure MAYBE_NAME NEWLINE DECLARATIONS end structure
+  { StStructure () (getTransSpan $1 $6) $2 (fromReverseList $4) }
+| structure MAYBE_NAME NEWLINE DECLARATIONS end
+  { StStructure () (getTransSpan $1 $5) $2 (fromReverseList $4) }
+
+MAYBE_NAME :: { Maybe Name }
+MAYBE_NAME
+: '/' NAME '/' { Just $2 }
+| {- empty -}  { Nothing }
+
+DECLARATIONS :: { [Statement A0] }
+DECLARATIONS
+: DECLARATIONS DECLARATION_STATEMENT NEWLINE
+  { $2 : $1 }
+| {- empty -} { [] }
 
 ENTRY_ARGS :: { AList Expression A0 }
 ENTRY_ARGS
@@ -828,16 +845,17 @@ LABEL_IN_STATEMENT :: { Expression A0 } : int { ExpValue () (getSpan $1) (let (T
 
 TYPE_SPEC :: { TypeSpec A0 }
 TYPE_SPEC
-: integer KIND_SELECTOR { TypeSpec () (getSpan $1) TypeInteger $2 }
-| real KIND_SELECTOR { TypeSpec () (getSpan $1) TypeReal $2  }
+: integer KIND_SELECTOR { TypeSpec () (getSpan ($1, $2)) TypeInteger $2 }
+| real KIND_SELECTOR { TypeSpec () (getSpan ($1, $2)) TypeReal $2  }
 | doublePrecision KIND_SELECTOR
-  { TypeSpec () (getSpan $1) TypeDoublePrecision $2 }
-| logical KIND_SELECTOR { TypeSpec () (getSpan $1) TypeLogical $2 }
-| complex KIND_SELECTOR { TypeSpec () (getSpan $1) TypeComplex $2 }
+  { TypeSpec () (getSpan ($1, $2)) TypeDoublePrecision $2 }
+| logical KIND_SELECTOR { TypeSpec () (getSpan ($1, $2)) TypeLogical $2 }
+| complex KIND_SELECTOR { TypeSpec () (getSpan ($1, $2)) TypeComplex $2 }
 | doubleComplex KIND_SELECTOR
-  { TypeSpec () (getSpan $1) TypeDoubleComplex $2 }
+  { TypeSpec () (getSpan ($1, $2)) TypeDoubleComplex $2 }
 | character CHAR_SELECTOR { TypeSpec () (getSpan ($1, $2)) TypeCharacter $2 }
 | byte KIND_SELECTOR { TypeSpec () (getSpan ($1, $2)) TypeByte $2 }
+| record '/' NAME '/' { TypeSpec () (getSpan ($1, $4)) (TypeRecord $3) Nothing }
 
 KIND_SELECTOR :: { Maybe (Selector A0) }
 KIND_SELECTOR

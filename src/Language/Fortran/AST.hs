@@ -65,6 +65,7 @@ data BaseType =
   | TypeCharacter
   | TypeCustom String
   | TypeByte
+  | TypeRecord String
   deriving (Ord, Eq, Show, Data, Typeable, Generic)
 
 instance Binary BaseType
@@ -198,6 +199,7 @@ data Block a =
 
 data Statement a  =
     StDeclaration         a SrcSpan (TypeSpec a) (Maybe (AList Attribute a)) (AList Declarator a)
+  | StStructure           a SrcSpan (Maybe String) (AList Statement a)
   | StIntent              a SrcSpan Intent (AList Expression a)
   | StOptional            a SrcSpan (AList Expression a)
   | StPublic              a SrcSpan (Maybe (AList Expression a))

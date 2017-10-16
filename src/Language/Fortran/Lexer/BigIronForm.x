@@ -26,6 +26,8 @@ import Language.Fortran.ParserMonad
 import Language.Fortran.Util.FirstParameter
 import Language.Fortran.Util.Position
 
+import Debug.Trace
+
 }
 
 $digit = [0-9]
@@ -98,6 +100,8 @@ tokens :-
   <keyword> "function"                        { toSC st >> addSpan TFunction  }
   <keyword> "subroutine"                      { toSC st >> addSpan TSubroutine  }
   <keyword> "blockdata"                       { toSC st >> addSpan TBlockData  }
+  <keyword,st> "structure"                    { toSC st >> addSpan TStructure  }
+  <keyword> "record"                          { toSC st >> addSpan TRecord  }
   <keyword> "end"                             { toSC st >> addSpan TEnd  }
 
   -- Tokens related to assignment statements
@@ -585,6 +589,8 @@ data Token = TLeftPar             SrcSpan
            | TFunction            SrcSpan
            | TSubroutine          SrcSpan
            | TBlockData           SrcSpan
+           | TStructure           SrcSpan
+           | TRecord              SrcSpan
            | TEnd                 SrcSpan
            | TAssign              SrcSpan
            | TOpAssign            SrcSpan
