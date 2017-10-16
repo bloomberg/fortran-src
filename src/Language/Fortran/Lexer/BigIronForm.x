@@ -98,7 +98,8 @@ tokens :-
 
   -- Tokens related to procedures and subprograms
   <keyword> "program"                         { toSC st >> addSpan TProgram }
-  <keyword> "function"                        { toSC st >> addSpan TFunction  }
+  -- TODO: probably need keywordP for all keywords?
+  <keyword> "function" / { keywordP }         { toSC st >> addSpan TFunction  }
   <keyword> "subroutine"                      { toSC st >> addSpan TSubroutine  }
   <keyword> "blockdata"                       { toSC st >> addSpan TBlockData  }
   <keyword,st> "structure"                    { toSC st >> addSpan TStructure  }
@@ -200,12 +201,12 @@ tokens :-
   <st,iif> ".neqv." / { fortran77P }          { addSpan TOpNotEquivalent  }
 
   -- Relational operators
-  -- <st,iif> "<" / { extended77P }              { addSpan TOpLT  }
-  -- <st,iif> "<=" / { extended77P }             { addSpan TOpLE  }
-  -- <st,iif> "==" / { extended77P }             { addSpan TOpEQ  }
+  <st,iif> "<" / { extended77P }              { addSpan TOpLT  }
+  <st,iif> "<=" / { extended77P }             { addSpan TOpLE  }
+  <st,iif> "==" / { extended77P }             { addSpan TOpEQ  }
   -- <st,iif> "!=" / { extended77P }             { addSpan TOpNE  }
-  -- <st,iif> ">" / { extended77P }              { addSpan TOpGT  }
-  -- <st,iif> ">=" / { extended77P }             { addSpan TOpGE  }
+  <st,iif> ">" / { extended77P }              { addSpan TOpGT  }
+  <st,iif> ">=" / { extended77P }             { addSpan TOpGE  }
   <st,iif> ".lt."                             { addSpan TOpLT  }
   <st,iif> ".le."                             { addSpan TOpLE  }
   <st,iif> ".eq."                             { addSpan TOpEQ  }
@@ -282,6 +283,9 @@ doP fv ai = isPrefixOf "do" (reverse . lexemeMatch . aiLexeme $ ai) &&
 
 ifP :: FortranVersion -> AlexInput -> Bool
 ifP fv ai = "if" == (reverse . lexemeMatch . aiLexeme $ ai)
+
+keywordP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
+keywordP fv _ _ ai = currentChar ai `elem` " \t"
 
 equalFollowsP :: FortranVersion -> AlexInput -> Bool
 equalFollowsP fv ai =
