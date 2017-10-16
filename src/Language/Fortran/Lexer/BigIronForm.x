@@ -219,6 +219,7 @@ tokens :-
 
   -- Strings
   <st> @posIntegerConst "h" / { fortran66P }  { lexHollerith }
+  <st,iif> @posIntegerConst "h" / { bigIronP }    { lexHollerith }
 
 {
 

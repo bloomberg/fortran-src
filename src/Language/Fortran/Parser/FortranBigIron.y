@@ -661,8 +661,7 @@ ARGUMENTS_LEVEL1
 -- Expression all by itself subsumes all other callable expressions.
 CALLABLE_EXPRESSION :: { Argument A0 }
 CALLABLE_EXPRESSION
-: HOLLERITH   { Argument () (getSpan $1) Nothing $1 }
-| EXPRESSION  { Argument () (getSpan $1) Nothing $1 }
+: EXPRESSION  { Argument () (getSpan $1) Nothing $1 }
 
 EXPRESSION :: { Expression A0 }
 EXPRESSION
@@ -684,6 +683,7 @@ EXPRESSION
 | '(' EXPRESSION ',' EXPRESSION ')' { ExpValue () (getTransSpan $1 $5) (ValComplex $2 $4) }
 | LOGICAL_LITERAL                   { $1 }
 | STRING                            { $1 }
+| HOLLERITH                         { $1 }
 -- There should be FUNCTION_CALL here but as far as the parser is concerned it is same as SUBSCRIPT,
 -- hence putting it here would cause a reduce/reduce conflict.
 --- | SUBSCRIPT                         { $1 }
