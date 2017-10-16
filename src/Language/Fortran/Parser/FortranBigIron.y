@@ -186,8 +186,23 @@ NAME :: { Name } : id { let (TId _ name) = $1 in name }
 
 INCLUDES :: { [ Block A0 ] }
 INCLUDES
-: NEWLINE BLOCKS { reverse $2 }
-| BLOCKS { reverse $1 }
+: NEWLINE INC_BLOCKS { reverse $2 }
+| INC_BLOCKS { reverse $1 }
+
+INC_BLOCKS :: { [ Block A0 ] }
+INC_BLOCKS
+: INC_BLOCKS INC_BLOCK { $2 : $1 }
+| {- EMPTY -} { [ ] }
+
+INC_BLOCK :: { Block A0 }
+INC_BLOCK
+: LABEL_IN_6COLUMN STATEMENT MAYBE_NEWLINE { BlStatement () (getTransSpan $1 $2) (Just $1) $2 }
+| STATEMENT MAYBE_NEWLINE { BlStatement () (getSpan $1) Nothing $1 }
+| INC_COMMENT_BLOCK { $1 }
+
+INC_COMMENT_BLOCK :: { Block A0 }
+INC_COMMENT_BLOCK
+: comment MAYBE_NEWLINE { let (TComment s c) = $1 in BlComment () s (Comment c) }
 
 BLOCKS :: { [ Block A0 ] }
 BLOCKS
