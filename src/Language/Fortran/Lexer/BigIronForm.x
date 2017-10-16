@@ -105,9 +105,9 @@ tokens :-
   <keyword> "end"                             { toSC st >> addSpan TEnd  }
 
   -- Tokens related to assignment statements
-  <keyword> "assign"                          { toSC st >> addSpan TAssign  }
+-- <keyword> "assign"                          { toSC st >> addSpan TAssign  }
   <st,iif> "="                                { addSpan TOpAssign  }
-  <st> "to"                                   { addSpan TTo  }
+--  <st> "to"                                   { addSpan TTo  }
 
   -- Tokens related to control statements
   <keyword> "goto"                            { toSC st >> addSpan TGoto  }
