@@ -78,6 +78,7 @@ tokens :-
 
   <0,st,keyword,iif> \n                       { resetPar >> toSC 0 >> addSpan TNewline }
   <0,st,keyword,iif> \r                       ;
+  <0,st,keyword,iif> ";"                      { resetPar >> toSC 0 >> addSpan TNewline }
 
   <st,keyword> "("                            { addSpan TLeftPar }
   <iif> "("                                   { incPar >> addSpan TLeftPar }
