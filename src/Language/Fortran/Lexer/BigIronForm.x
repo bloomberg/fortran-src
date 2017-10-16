@@ -278,7 +278,7 @@ doP fv ai = isPrefixOf "do" (reverse . lexemeMatch . aiLexeme $ ai) &&
         _ -> lexer f
 
 ifP :: FortranVersion -> AlexInput -> Bool
-ifP fv ai = isPrefixOf "if" (reverse . lexemeMatch . aiLexeme $ ai)
+ifP fv ai = "if" == (reverse . lexemeMatch . aiLexeme $ ai)
 
 equalFollowsP :: FortranVersion -> AlexInput -> Bool
 equalFollowsP fv ai =
