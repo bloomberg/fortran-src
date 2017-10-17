@@ -67,8 +67,8 @@ main = do
     ([path], actionOpt) -> do
       let path = head parsedArgs
       let idirs = includeDirs opts
-      contents <- flexReadFile path
       let version = fromMaybe (deduceVersion path) (fortranVersion opts)
+      contents <- truncateLines version <$> flexReadFile path
       let (Just parserF0) = lookup version parserWithModFilesVersions
       let parserF = case version of
             FortranBigIron ->
@@ -307,3 +307,8 @@ instance {-# OVERLAPPING #-} Show [ FreeForm.Token ] where
 
 flexReadFile :: String -> IO B.ByteString
 flexReadFile = fmap (encodeUtf8 . decodeUtf8With (replace ' ')) . B.readFile
+
+truncateLines :: FortranVersion -> B.ByteString -> B.ByteString
+truncateLines fv b
+  | fv > FortranBigIron = b
+  | otherwise           = B.unlines . map (B.take 72) . B.lines $ b
