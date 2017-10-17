@@ -624,6 +624,7 @@ SIMPLE_EXPRESSION :: { Expression A0 }
 SIMPLE_EXPRESSION
 : CONSTANT '*' CONSTANT  { ExpBinary () (getTransSpan $1 $3) Multiplication $1 $3 }
 | CONSTANT { $1 }
+| '(' EXPRESSION ')' { $2 }
 
 CONSTANT :: { Expression A0 }
 CONSTANT
@@ -635,12 +636,14 @@ CONSTANT
 VARIABLE_DECLARATOR :: { Declarator A0 }
 VARIABLE_DECLARATOR
 : VARIABLE { DeclVariable () (getSpan $1) $1 Nothing Nothing }
-| VARIABLE '*' EXPRESSION
+| VARIABLE '*' SIMPLE_EXPRESSION
   { DeclVariable () (getTransSpan $1 $3) $1 (Just $3) Nothing }
 | VARIABLE '*' '(' '*' ')'
   { DeclVariable () (getTransSpan $1 $5) $1 (Just $ ExpValue () (getSpan $4) ValStar) Nothing }
-| VARIABLE '/' EXPRESSION '/'
+| VARIABLE '/' SIMPLE_EXPRESSION '/'
   { DeclVariable () (getTransSpan $1 $4) $1 Nothing (Just $3) }
+| VARIABLE '*' SIMPLE_EXPRESSION '/' SIMPLE_EXPRESSION '/'
+  { DeclVariable () (getTransSpan $1 $6) $1 (Just $3) (Just $5) }
 
 DIMENSION_DECLARATORS :: { AList DimensionDeclarator A0 }
 DIMENSION_DECLARATORS
