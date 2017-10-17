@@ -200,6 +200,7 @@ data Block a =
 data Statement a  =
     StDeclaration         a SrcSpan (TypeSpec a) (Maybe (AList Attribute a)) (AList Declarator a)
   | StStructure           a SrcSpan (Maybe String) (AList Statement a)
+  | StUnion               a SrcSpan (AList UnionMap a)
   | StIntent              a SrcSpan Intent (AList Expression a)
   | StOptional            a SrcSpan (AList Expression a)
   | StPublic              a SrcSpan (Maybe (AList Expression a))
@@ -338,6 +339,10 @@ data DataGroup a =
   DataGroup a SrcSpan (AList Expression a) (AList Expression a)
   deriving (Eq, Show, Data, Typeable, Generic, Functor)
 
+data UnionMap a =
+  UnionMap a SrcSpan (AList Statement a)
+  deriving (Eq, Show, Data, Typeable, Generic, Functor)
+
 data FormatItem a =
     FIFormatList            a             SrcSpan   (Maybe String) (AList FormatItem a)
   | FIHollerith             a             SrcSpan   (Value a)
@@ -420,6 +425,8 @@ data Declarator a =
               (AList DimensionDeclarator a) -- Dimensions
               (Maybe (Expression a)) -- Length (character)
               (Maybe (Expression a)) -- Initial value
+  | DeclUnion a SrcSpan
+              (AList (AList Statement) a) -- union alternatives
   deriving (Eq, Show, Data, Typeable, Generic, Functor)
 
 setInitialisation :: Declarator a -> Expression a -> Declarator a
@@ -485,6 +492,7 @@ instance FirstParameter (ImpList a) a
 instance FirstParameter (ImpElement a) a
 instance FirstParameter (CommonGroup a) a
 instance FirstParameter (DataGroup a) a
+instance FirstParameter (UnionMap a) a
 instance FirstParameter (Namelist a) a
 instance FirstParameter (FormatItem a) a
 instance FirstParameter (Expression a) a
@@ -507,6 +515,7 @@ instance SecondParameter (ImpList a) SrcSpan
 instance SecondParameter (ImpElement a) SrcSpan
 instance SecondParameter (CommonGroup a) SrcSpan
 instance SecondParameter (DataGroup a) SrcSpan
+instance SecondParameter (UnionMap a) SrcSpan
 instance SecondParameter (Namelist a) SrcSpan
 instance SecondParameter (FormatItem a) SrcSpan
 instance SecondParameter (Expression a) SrcSpan
@@ -529,6 +538,7 @@ instance Annotated ImpList
 instance Annotated ImpElement
 instance Annotated CommonGroup
 instance Annotated DataGroup
+instance Annotated UnionMap
 instance Annotated Namelist
 instance Annotated FormatItem
 instance Annotated Expression
@@ -551,6 +561,7 @@ instance Spanned (ImpElement a)
 instance Spanned (Block a)
 instance Spanned (CommonGroup a)
 instance Spanned (DataGroup a)
+instance Spanned (UnionMap a)
 instance Spanned (Namelist a)
 instance Spanned (FormatItem a)
 instance Spanned (Expression a)
@@ -722,6 +733,7 @@ instance Out a => Out (Comment a)
 instance Out a => Out (Block a)
 instance Out a => Out (CommonGroup a)
 instance Out a => Out (DataGroup a)
+instance Out a => Out (UnionMap a)
 instance Out a => Out (Namelist a)
 instance Out a => Out (FormatItem a)
 instance Out a => Out (Expression a)

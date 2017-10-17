@@ -54,6 +54,11 @@ import Debug.Trace
   subroutine            { TSubroutine _ }
   blockData             { TBlockData _ }
   structure             { TStructure _ }
+  union                 { TUnion _ }
+  map                   { TMap _ }
+  endstructure          { TEndStructure _ }
+  endunion              { TEndUnion _ }
+  endmap                { TEndMap _ }
   record                { TRecord _ }
   end                   { TEnd _ }
   '='                   { TOpAssign _ }
@@ -443,9 +448,7 @@ NONEXECUTABLE_STATEMENT
 | entry VARIABLE { StEntry () (getTransSpan $1 $2) $2 Nothing Nothing }
 | entry VARIABLE ENTRY_ARGS { StEntry () (getTransSpan $1 $3) $2 (Just $3) Nothing }
 | include STRING { StInclude () (getTransSpan $1 $2) $2 Nothing }
-| structure MAYBE_NAME NEWLINE DECLARATIONS end structure
-  { StStructure () (getTransSpan $1 $6) $2 (fromReverseList $4) }
-| structure MAYBE_NAME NEWLINE DECLARATIONS end
+| structure MAYBE_NAME NEWLINE DECLARATIONS endstructure
   { StStructure () (getTransSpan $1 $5) $2 (fromReverseList $4) }
 
 MAYBE_NAME :: { Maybe Name }
@@ -455,9 +458,35 @@ MAYBE_NAME
 
 DECLARATIONS :: { [Statement A0] }
 DECLARATIONS
-: DECLARATIONS DECLARATION_STATEMENT NEWLINE
+: DECLARATIONS STRUCTURE_DECLARATION_STATEMENT
   { $2 : $1 }
-| {- empty -} { [] }
+| STRUCTURE_DECLARATION_STATEMENT { [ $1 ] }
+
+STRUCTURE_DECLARATION_STATEMENT :: { Statement A0 }
+STRUCTURE_DECLARATION_STATEMENT
+: DECLARATION_STATEMENT NEWLINE { $1 }
+| union NEWLINE UNION_MAPS endunion NEWLINE
+  { StUnion () (getTransSpan $1 $5) (fromReverseList $3) }
+
+UNION_MAPS :: { [ UnionMap A0 ] }
+UNION_MAPS
+: UNION_MAPS UNION_MAP { $2 : $1 }
+| UNION_MAP { [ $1 ] }
+
+UNION_MAP :: { UnionMap A0 }
+UNION_MAP
+: map NEWLINE DECLARATION_STATEMENTS endmap NEWLINE
+  { UnionMap () (getTransSpan $1 $5) (fromReverseList $3) }
+
+DECLARATION_STATEMENTS :: { [Statement A0] }
+DECLARATION_STATEMENTS
+: DECLARATION_STATEMENTS SIMPLE_DECLARATION_STATEMENT
+  { $2 : $1 }
+| SIMPLE_DECLARATION_STATEMENT { [ $1 ] }
+
+SIMPLE_DECLARATION_STATEMENT :: { Statement A0 }
+SIMPLE_DECLARATION_STATEMENT
+: DECLARATION_STATEMENT NEWLINE { $1 }
 
 ENTRY_ARGS :: { AList Expression A0 }
 ENTRY_ARGS

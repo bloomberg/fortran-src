@@ -102,7 +102,12 @@ tokens :-
   <keyword> "function" / { functionP }        { toSC st >> addSpan TFunction  }
   <keyword> "subroutine"                      { toSC st >> addSpan TSubroutine  }
   <keyword> "blockdata"                       { toSC st >> addSpan TBlockData  }
-  <keyword,st> "structure"                    { toSC st >> addSpan TStructure  }
+  <keyword> "structure"                       { toSC st >> addSpan TStructure  }
+  <keyword> "union"                           { toSC st >> addSpan TUnion  }
+  <keyword> "map"                             { toSC st >> addSpan TMap  }
+  <keyword> "endstructure"                    { toSC st >> addSpan TEndStructure  }
+  <keyword> "endunion"                        { toSC st >> addSpan TEndUnion  }
+  <keyword> "endmap"                          { toSC st >> addSpan TEndMap  }
   <keyword> "record"                          { toSC st >> addSpan TRecord  }
   <keyword> "end"                             { toSC st >> addSpan TEnd  }
 
@@ -667,6 +672,11 @@ data Token = TLeftPar             SrcSpan
            | TBlockData           SrcSpan
            | TStructure           SrcSpan
            | TRecord              SrcSpan
+           | TUnion               SrcSpan
+           | TMap                 SrcSpan
+           | TEndStructure        SrcSpan
+           | TEndUnion            SrcSpan
+           | TEndMap              SrcSpan
            | TEnd                 SrcSpan
            | TAssign              SrcSpan
            | TOpAssign            SrcSpan
