@@ -77,9 +77,9 @@ tokens :-
   <0> . / { \_ ai _ _ -> atColP 6 ai }        { toSC keyword }
   <0> " "                                     ;
 
-  <0,st,keyword,iif> \n                       { resetPar >> toSC 0 >> addSpan TNewline }
-  <0,st,keyword,iif> \r                       ;
-  <0,st,keyword,iif> ";"                      { resetPar >> toSC 0 >> addSpan TNewline }
+  <0,st,keyword,iif,assn> \n                  { resetPar >> toSC 0 >> addSpan TNewline }
+  <0,st,keyword,iif,assn> \r                  ;
+  <0,st,keyword,iif,assn> ";"                 { resetPar >> toSC 0 >> addSpan TNewline }
 
   <st,keyword> "("                            { addSpan TLeftPar }
   <iif> "("                                   { incPar >> addSpan TLeftPar }
@@ -112,9 +112,10 @@ tokens :-
   <keyword> "end"                             { toSC st >> addSpan TEnd  }
 
   -- Tokens related to assignment statements
--- <keyword> "assign"                          { toSC st >> addSpan TAssign  }
+  <keyword> "assign"                          { toSC assn >> addSpan TAssign  }
+  <assn> "to"                                 { addSpan TTo  }
+  <assn> @idBI / { notToP }                   { addSpanAndMatch TId }
   <st,iif> "="                                { addSpan TOpAssign  }
---  <st> "to"                                   { addSpan TTo  }
 
   -- Tokens related to control statements
   <keyword> "goto"                            { toSC st >> addSpan TGoto  }
@@ -179,7 +180,7 @@ tokens :-
   -- Tokens needed to parse integers, reals, double precision and complex
   -- constants
   <st,iif> @exponent / { exponentP }          { addSpanAndMatch TExponent }
-  <st,iif> @integerConst                      { addSpanAndMatch TInt }
+  <st,iif,assn> @integerConst                 { addSpanAndMatch TInt }
     -- can be part (end) of function type declaration
   <keyword> @integerConst                     { typeSCChange >> addSpanAndMatch TInt }
   <st,iif,keyword> @bozLiteralConst           { addSpanAndMatch TBozIntBI }
@@ -331,6 +332,9 @@ functionP fv _ _ ai = "function" == (reverse . lexemeMatch . aiLexeme $ ai) &&
         TId{} -> lexer f
         TLeftPar{} -> return True
         _ -> return False
+
+notToP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
+notToP fv _ _ ai = not $ "to" `isPrefixOf` (reverse . lexemeMatch . aiLexeme $ ai)
 
 equalFollowsP :: FortranVersion -> AlexInput -> Bool
 equalFollowsP fv ai =
