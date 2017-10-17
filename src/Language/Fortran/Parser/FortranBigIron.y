@@ -532,8 +532,13 @@ ELEMENT_SEGMENT
 
 DATA_GROUPS :: { AList DataGroup A0 }
 DATA_GROUPS
-: DATA_GROUPS ',' NAME_LIST  '/' DATA_ITEMS '/' { setSpan (getTransSpan $1 $6) $ (DataGroup () (getTransSpan $3 $6) (aReverse $3) (aReverse $5)) `aCons` $1 }
-| NAME_LIST  '/' DATA_ITEMS '/' { AList () (getTransSpan $1 $4) [ DataGroup () (getTransSpan $1 $4) (aReverse $1) (aReverse $3) ] }
+: DATA_GROUPS ',' DATA_NAMES  '/' DATA_ITEMS '/' { setSpan (getTransSpan $1 $6) $ (DataGroup () (getTransSpan $3 $6) (aReverse $3) (aReverse $5)) `aCons` $1 }
+| DATA_NAMES  '/' DATA_ITEMS '/' { AList () (getTransSpan $1 $4) [ DataGroup () (getTransSpan $1 $4) (aReverse $1) (aReverse $3) ] }
+
+DATA_NAMES :: { AList Expression A0 }
+DATA_NAMES
+: NAME_LIST  { $1 }
+| IMPLIED_DO { fromList () [ $1 ] }
 
 DATA_ITEMS :: { AList Expression A0 }
 DATA_ITEMS
