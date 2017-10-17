@@ -434,7 +434,7 @@ NONEXECUTABLE_STATEMENT
 | common COMMON_GROUPS { StCommon () (getTransSpan $1 $2) (aReverse $2) }
 | equivalence EQUIVALENCE_GROUPS { StEquivalence () (getTransSpan $1 $2) (aReverse $2) }
 | pointer POINTER_LIST { StPointer () (getTransSpan $1 $2) (fromReverseList $2) }
-| data DATA_GROUPS { StData () (getTransSpan $1 $2) (aReverse $2) }
+| data DATA_GROUPS { StData () (getTransSpan $1 $2) (fromReverseList $2) }
 | automatic DECLARATORS { StAutomatic () (getTransSpan $1 $2) (aReverse $2) }
 -- Following is a fake node to make arbitrary FORMAT statements parsable.
 -- Must be fixed in the future. TODO
@@ -559,10 +559,15 @@ ELEMENT_SEGMENT
 : VARIABLE { $1 }
 | SUBSCRIPT { $1 }
 
-DATA_GROUPS :: { AList DataGroup A0 }
+DATA_GROUPS :: { [DataGroup A0] }
 DATA_GROUPS
-: DATA_GROUPS ',' DATA_NAMES  '/' DATA_ITEMS '/' { setSpan (getTransSpan $1 $6) $ (DataGroup () (getTransSpan $3 $6) (aReverse $3) (aReverse $5)) `aCons` $1 }
-| DATA_NAMES  '/' DATA_ITEMS '/' { AList () (getTransSpan $1 $4) [ DataGroup () (getTransSpan $1 $4) (aReverse $1) (aReverse $3) ] }
+: DATA_GROUPS ',' DATA_GROUP { $3 : $1 }
+| DATA_GROUPS DATA_GROUP     { $2 : $1 }
+| DATA_GROUP                 { [$1] }
+
+DATA_GROUP :: { DataGroup A0 }
+DATA_GROUP
+: DATA_NAMES  '/' DATA_ITEMS '/' { DataGroup () (getTransSpan $1 $4) (aReverse $1) (aReverse $3) }
 
 DATA_NAMES :: { AList Expression A0 }
 DATA_NAMES
