@@ -110,6 +110,7 @@ import Debug.Trace
   bozBI                 { TBozIntBI _ _ }
   exponent              { TExponent _ _ }
   bool                  { TBool _ _ }
+  val                   { TByVal _ }
   '+'                   { TOpPlus _ }
   '-'                   { TOpMinus _ }
   '**'                  { TOpExp _ }
@@ -712,6 +713,7 @@ EXPRESSION
           expList = AList () (getSpan exps) exps }
     in ExpInitialisation () (getTransSpan $1 $3) expList
           }
+| val '(' EXPRESSION ')' { ExpByValue () (getTransSpan $1 $4) $3 }
 
 IMPLIED_DO :: { Expression A0 }
 IMPLIED_DO

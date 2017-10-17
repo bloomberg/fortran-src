@@ -214,6 +214,8 @@ tokens :-
   <st,iif> ".gt."                             { addSpan TOpGT  }
   <st,iif> ".ge."                             { addSpan TOpGE  }
 
+  <st,iif> "%val" / { bigIronP }              { addSpan TByVal  }
+
   -- ID
   <st,iif> @id                                { addSpanAndMatch TId }
   <st,iif> @idExtended / { extended77P }      { addSpanAndMatch TId }
@@ -673,6 +675,7 @@ data Token = TLeftPar             SrcSpan
            | TBozIntBI            SrcSpan String
            | TExponent            SrcSpan String
            | TBool                SrcSpan String
+           | TByVal               SrcSpan
            | TOpPlus              SrcSpan
            | TOpMinus             SrcSpan
            | TOpExp               SrcSpan
