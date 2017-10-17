@@ -604,14 +604,14 @@ ARRAY_DECLARATOR
 | VARIABLE '(' DIMENSION_DECLARATORS ')' '/' SIMPLE_EXPRESSION_LIST '/'
   { DeclArray () (getTransSpan $1 $7) $1 (aReverse $3) Nothing
     (Just (ExpInitialisation () (getSpan $6) (fromReverseList $6))) }
-| VARIABLE '*' CONSTANT '(' DIMENSION_DECLARATORS ')'
+| VARIABLE '*' SIMPLE_EXPRESSION '(' DIMENSION_DECLARATORS ')'
   { DeclArray () (getTransSpan $1 $6) $1 (aReverse $5) (Just $3) Nothing }
-| VARIABLE '*' CONSTANT '(' DIMENSION_DECLARATORS ')' '/' SIMPLE_EXPRESSION_LIST '/'
+| VARIABLE '*' SIMPLE_EXPRESSION '(' DIMENSION_DECLARATORS ')' '/' SIMPLE_EXPRESSION_LIST '/'
   { DeclArray () (getTransSpan $1 $9) $1 (aReverse $5) (Just $3)
     (Just (ExpInitialisation () (getSpan $8) (fromReverseList $8))) }
-| VARIABLE '(' DIMENSION_DECLARATORS ')' '*' CONSTANT
+| VARIABLE '(' DIMENSION_DECLARATORS ')' '*' SIMPLE_EXPRESSION
   { DeclArray () (getTransSpan $1 $6) $1 (aReverse $3) (Just $6) Nothing }
-| VARIABLE '(' DIMENSION_DECLARATORS ')' '*' CONSTANT '/' SIMPLE_EXPRESSION_LIST '/'
+| VARIABLE '(' DIMENSION_DECLARATORS ')' '*' SIMPLE_EXPRESSION '/' SIMPLE_EXPRESSION_LIST '/'
   { DeclArray () (getTransSpan $1 $9) $1 (aReverse $3) (Just $6)
     (Just (ExpInitialisation () (getSpan $8) (fromReverseList $8))) }
 
@@ -624,6 +624,7 @@ SIMPLE_EXPRESSION :: { Expression A0 }
 SIMPLE_EXPRESSION
 : CONSTANT '*' CONSTANT  { ExpBinary () (getTransSpan $1 $3) Multiplication $1 $3 }
 | CONSTANT { $1 }
+| '(' '*' ')' { ExpValue () (getSpan $2) ValStar }
 | '(' EXPRESSION ')' { $2 }
 
 CONSTANT :: { Expression A0 }
@@ -638,8 +639,6 @@ VARIABLE_DECLARATOR
 : VARIABLE { DeclVariable () (getSpan $1) $1 Nothing Nothing }
 | VARIABLE '*' SIMPLE_EXPRESSION
   { DeclVariable () (getTransSpan $1 $3) $1 (Just $3) Nothing }
-| VARIABLE '*' '(' '*' ')'
-  { DeclVariable () (getTransSpan $1 $5) $1 (Just $ ExpValue () (getSpan $4) ValStar) Nothing }
 | VARIABLE '/' SIMPLE_EXPRESSION '/'
   { DeclVariable () (getTransSpan $1 $4) $1 Nothing (Just $3) }
 | VARIABLE '*' SIMPLE_EXPRESSION '/' SIMPLE_EXPRESSION '/'
