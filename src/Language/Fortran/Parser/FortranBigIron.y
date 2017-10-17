@@ -581,7 +581,7 @@ DATA_ITEMS
 
 DATA_ITEM :: { Expression A0 }
 DATA_ITEM
-: INTEGER_LITERAL '*' DATA_ITEM_LEVEL1 { ExpBinary () (getTransSpan $1 $3) Multiplication $1 $3 }
+: INTEGER_CONSTANT '*' DATA_ITEM_LEVEL1 { ExpBinary () (getTransSpan $1 $3) Multiplication $1 $3 }
 | DATA_ITEM_LEVEL1 { $1 }
 
 DATA_ITEM_LEVEL1 :: { Expression A0 }
@@ -676,7 +676,7 @@ SIMPLE_EXPRESSION_LIST
 
 SIMPLE_EXPRESSION :: { Expression A0 }
 SIMPLE_EXPRESSION
-: CONSTANT '*' CONSTANT  { ExpBinary () (getTransSpan $1 $3) Multiplication $1 $3 }
+: INTEGER_CONSTANT '*' CONSTANT  { ExpBinary () (getTransSpan $1 $3) Multiplication $1 $3 }
 | CONSTANT { $1 }
 | '(' '*' ')' { ExpValue () (getSpan $2) ValStar }
 | '(' EXPRESSION ')' { $2 }
@@ -688,6 +688,11 @@ CONSTANT
 | LOGICAL_LITERAL { $1 }
 | STRING { $1 }
 | HOLLERITH { $1 }
+
+INTEGER_CONSTANT :: { Expression A0 }
+INTEGER_CONSTANT
+: VARIABLE { $1 }
+| SIGNED_NUMERIC_LITERAL { $1 }
 
 VARIABLE_DECLARATOR :: { Declarator A0 }
 VARIABLE_DECLARATOR
