@@ -382,9 +382,11 @@ atColP n ai = (posColumn . aiPosition) ai == n
 -- as an exponent token.
 exponentP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
 exponentP _ _ _ ai =
-  case aiPreviousToken ai of
-    Just (TInt _ _) -> True
-    Just (TDot _) -> True
+  case aiPreviousTokensInLine ai of
+    -- real*8 d8 is not an exponent
+    TInt{} : TStar{} : TType{} : _ -> False
+    TInt{} : _ -> True
+    TDot{} : _ -> True
     _ -> False
 
 fortran66P :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
