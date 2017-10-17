@@ -757,6 +757,7 @@ CONSTANT_EXPRESSION
 | LOGICAL_LITERAL               { $1 }
 | string                        { let (TString s cs) = $1 in ExpValue () s (ValString cs) }
 | VARIABLE                     { $1 }
+| SUBSCRIPT                    { $1 }
 
 ARITHMETIC_CONSTANT_EXPRESSION :: { Expression A0 }
 ARITHMETIC_CONSTANT_EXPRESSION
