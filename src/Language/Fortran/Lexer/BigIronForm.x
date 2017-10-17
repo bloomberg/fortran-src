@@ -159,6 +159,7 @@ tokens :-
   <st> "none" / { fortran77P }                { addSpan TNone  }
   <keyword> "parameter" / { fortran77P }      { toSC st >> addSpan TParameter  }
   <keyword> "entry" / { fortran77P }          { toSC st >> addSpan TEntry  }
+  <keyword> "pointer" / { bigIronP }          { toSC st >> addSpan TPointer  }
 
   -- Tokens related to data initalization statement
   <keyword> "data"                            { toSC st >> addSpan TData  }
@@ -675,6 +676,7 @@ data Token = TLeftPar             SrcSpan
            | TDimension           SrcSpan
            | TCommon              SrcSpan
            | TEquivalence         SrcSpan
+           | TPointer             SrcSpan
            | TExternal            SrcSpan
            | TIntrinsic           SrcSpan
            | TType                SrcSpan String

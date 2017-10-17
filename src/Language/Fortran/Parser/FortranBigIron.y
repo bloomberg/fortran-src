@@ -100,6 +100,7 @@ import Debug.Trace
   intrinsic             { TIntrinsic _ }
   implicit              { TImplicit _ }
   parameter             { TParameter _ }
+  pointer               { TPointer _ }
   entry                 { TEntry _ }
   none                  { TNone _ }
   data                  { TData _ }
@@ -427,6 +428,7 @@ NONEXECUTABLE_STATEMENT
 | dimension ARRAY_DECLARATORS { StDimension () (getTransSpan $1 $2) (aReverse $2) }
 | common COMMON_GROUPS { StCommon () (getTransSpan $1 $2) (aReverse $2) }
 | equivalence EQUIVALENCE_GROUPS { StEquivalence () (getTransSpan $1 $2) (aReverse $2) }
+| pointer POINTER_LIST { StPointer () (getTransSpan $1 $2) (fromReverseList $2) }
 | data DATA_GROUPS { StData () (getTransSpan $1 $2) (aReverse $2) }
 | automatic DECLARATORS { StAutomatic () (getTransSpan $1 $2) (aReverse $2) }
 -- Following is a fake node to make arbitrary FORMAT statements parsable.
@@ -556,6 +558,17 @@ EQUIVALENCE_GROUPS :: { AList (AList Expression) A0 }
 EQUIVALENCE_GROUPS
 : EQUIVALENCE_GROUPS ','  '(' NAME_LIST ')' { setSpan (getTransSpan $1 $5) $ (setSpan (getTransSpan $3 $5) $ aReverse $4) `aCons` $1 }
 | '(' NAME_LIST ')' { let s = (getTransSpan $1 $3) in AList () s [ setSpan s $ aReverse $2 ] }
+
+POINTER_LIST :: { [ Declarator A0 ] }
+POINTER_LIST
+: POINTER_LIST ',' POINTER
+  { $3 : $1 }
+| POINTER
+  { [ $1 ] }
+
+POINTER :: { Declarator A0 }
+: '(' VARIABLE ',' VARIABLE ')'
+  { DeclVariable () (getTransSpan $1 $5) $2 Nothing (Just $4) }
 
 COMMON_GROUPS :: { AList CommonGroup A0 }
 COMMON_GROUPS
