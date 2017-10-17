@@ -41,7 +41,7 @@ $bit = 0-1
 
 $letter = [a-z]
 $alphanumeric = [$letter $digit]
-$alphanumericExtended = [$letter $digit \_]
+$alphanumericExtended = [$letter $digit \_ \$]
 $special = [\ \=\+\-\*\/\(\)\,\.\$]
 
 -- This should really be 6 characters but there are many standard non-compliant
