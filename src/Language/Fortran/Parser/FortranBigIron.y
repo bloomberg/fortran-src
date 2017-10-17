@@ -990,9 +990,12 @@ readInDirs (d:ds) f = do
   -- print (d</>f)
   b <- doesFileExist (d</>f)
   if b then
-    B.readFile (d</>f)
+    truncateLines <$> B.readFile (d</>f)
   else
     readInDirs ds f
+
+truncateLines :: B.ByteString -> B.ByteString
+truncateLines b = B.unlines . map (B.take 72) . B.lines $ b
 
 parseError :: Token -> LexAction a
 parseError _ = do
