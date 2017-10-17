@@ -1,5 +1,6 @@
 -- -*- Mode: Haskell -*-
 {
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveDataTypeable #-}
@@ -266,7 +267,7 @@ idP fv ao i ai = not (doP fv ai) && not (ifP fv ao i ai)
 
 doP :: FortranVersion -> AlexInput -> Bool
 doP fv ai = "do" `isPrefixOf` (reverse . lexemeMatch . aiLexeme $ ai) &&
-    case unParse (lexer $ f) ps of
+    case unParse (lexer $ f 0) ps of
       ParseOk True _ -> True
       _ -> False
   where
@@ -276,17 +277,18 @@ doP fv ai = "do" `isPrefixOf` (reverse . lexemeMatch . aiLexeme $ ai) &&
       , psFilename = "<unknown>"
       , psParanthesesCount = ParanthesesCount 0 False
       , psContext = [ ConStart ] }
-    f t =
+    f 0 t =
       case t of
-        TInt{} -> return True
-        TId{} -> lexer f
-        TOpAssign{} -> lexer f
-        TOpPlus{} -> lexer f
-        TOpMinus{} -> lexer f
-        TLeftPar{} -> lexer f
-        TRightPar{} -> lexer f
+        TNewline{} -> return False
+        TEOF{} -> return False
+        TLeftPar{} -> lexer $ f 1
         TComma{} -> return True
-        _ -> return False
+        _ -> lexer $ f 0
+    f !n t =
+      case t of
+        TLeftPar{} -> lexer $ f (n+1)
+        TRightPar{} -> lexer $ f (n-1)
+        _ -> lexer $ f n
 
 ifP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
 ifP fv _ _ ai = "if" == (reverse . lexemeMatch . aiLexeme $ ai) &&
