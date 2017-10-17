@@ -305,6 +305,18 @@ instance {-# OVERLAPPING #-} Show [ FreeForm.Token ] where
       isNewline (FreeForm.TNewline _) = True
       isNewline _ = False
 
+instance {-# OVERLAPPING #-} Show [ BigIronForm.Token ] where
+  show = unlines . lines'
+    where
+      lines' [] = []
+      lines' xs =
+        let (x, xs') = break isNewline xs
+        in case xs' of
+             (nl@(BigIronForm.TNewline _):xs'') -> ('\t' : (intercalate ", " . map show $ x ++ [nl])) : lines' xs''
+             xs'' -> [('\t' : (intercalate ", " . map show $ x))]
+      isNewline (BigIronForm.TNewline _) = True
+      isNewline _ = False
+
 flexReadFile :: String -> IO B.ByteString
 flexReadFile = fmap (encodeUtf8 . decodeUtf8With (replace ' ')) . B.readFile
 
