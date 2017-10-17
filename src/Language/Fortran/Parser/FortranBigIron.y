@@ -592,6 +592,7 @@ DATA_ITEM_LEVEL1
 | '(' SIGNED_NUMERIC_LITERAL ',' SIGNED_NUMERIC_LITERAL ')' { ExpValue () (getTransSpan $1 $5) (ValComplex $2 $4)}
 | LOGICAL_LITERAL         { $1 }
 | STRING                  { $1 }
+| HOLLERITH               { $1 }
 
 EQUIVALENCE_GROUPS :: { AList (AList Expression) A0 }
 EQUIVALENCE_GROUPS
@@ -686,6 +687,7 @@ CONSTANT
 | SIGNED_NUMERIC_LITERAL { $1 }
 | LOGICAL_LITERAL { $1 }
 | STRING { $1 }
+| HOLLERITH { $1 }
 
 VARIABLE_DECLARATOR :: { Declarator A0 }
 VARIABLE_DECLARATOR
