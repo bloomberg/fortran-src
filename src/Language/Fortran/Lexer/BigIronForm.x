@@ -265,7 +265,7 @@ idP fv ao i ai = not (doP fv ai) && not (ifP fv ao i ai)
              && (equalFollowsP fv ai || rParFollowsP fv ai)
 
 doP :: FortranVersion -> AlexInput -> Bool
-doP fv ai = isPrefixOf "do" (reverse . lexemeMatch . aiLexeme $ ai) &&
+doP fv ai = "do" `isPrefixOf` (reverse . lexemeMatch . aiLexeme $ ai) &&
     case unParse (lexer $ f) ps of
       ParseOk True _ -> True
       _ -> False
@@ -278,10 +278,15 @@ doP fv ai = isPrefixOf "do" (reverse . lexemeMatch . aiLexeme $ ai) &&
       , psContext = [ ConStart ] }
     f t =
       case t of
-        TNewline{} -> return False
-        TEOF{} -> return False
+        TInt{} -> return True
+        TId{} -> lexer f
+        TOpAssign{} -> lexer f
+        TOpPlus{} -> lexer f
+        TOpMinus{} -> lexer f
+        TLeftPar{} -> lexer f
+        TRightPar{} -> lexer f
         TComma{} -> return True
-        _ -> lexer f
+        _ -> return False
 
 ifP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
 ifP fv _ _ ai = "if" == (reverse . lexemeMatch . aiLexeme $ ai) &&
