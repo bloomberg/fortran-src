@@ -98,8 +98,7 @@ tokens :-
 
   -- Tokens related to procedures and subprograms
   <keyword> "program"                         { toSC st >> addSpan TProgram }
-  -- TODO: probably need keywordP for all keywords?
-  <keyword> "function" / { keywordP }         { toSC st >> addSpan TFunction  }
+  <keyword> "function" / { functionP }        { toSC st >> addSpan TFunction  }
   <keyword> "subroutine"                      { toSC st >> addSpan TSubroutine  }
   <keyword> "blockdata"                       { toSC st >> addSpan TBlockData  }
   <keyword,st> "structure"                    { toSC st >> addSpan TStructure  }
@@ -286,8 +285,24 @@ doP fv ai = isPrefixOf "do" (reverse . lexemeMatch . aiLexeme $ ai) &&
 ifP :: FortranVersion -> AlexInput -> Bool
 ifP fv ai = "if" == (reverse . lexemeMatch . aiLexeme $ ai)
 
-keywordP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
-keywordP fv _ _ ai = currentChar ai `elem` " \t"
+functionP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
+functionP fv _ _ ai = "function" == (reverse . lexemeMatch . aiLexeme $ ai) &&
+    case unParse (lexer $ f) ps of
+      ParseOk True _ -> True
+      _ -> False
+  where
+    ps = ParseState
+      { psAlexInput = ai { aiStartCode = st}
+      , psVersion = fv
+      , psFilename = "<unknown>"
+      , psParanthesesCount = ParanthesesCount 0 False
+      , psContext = [ ConStart ] }
+    f t =
+      case t of
+        -- a function keyword should be followed by the name and a left paren
+        TId{} -> lexer f
+        TLeftPar{} -> return True
+        _ -> return False
 
 equalFollowsP :: FortranVersion -> AlexInput -> Bool
 equalFollowsP fv ai =
