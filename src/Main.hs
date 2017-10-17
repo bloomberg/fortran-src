@@ -323,4 +323,4 @@ flexReadFile = fmap (encodeUtf8 . decodeUtf8With (replace ' ')) . B.readFile
 truncateLines :: FortranVersion -> B.ByteString -> B.ByteString
 truncateLines fv b
   | fv > FortranBigIron = b
-  | otherwise           = B.unlines . map (B.take 72) . B.lines $ b
+  | otherwise           = B.unlines . map (B.filter (/='\r') . B.take 72) . B.lines $ b

@@ -1043,7 +1043,7 @@ readInDirs (d:ds) f = do
     readInDirs ds f
 
 truncateLines :: B.ByteString -> B.ByteString
-truncateLines b = B.unlines . map (B.take 72) . B.lines $ b
+truncateLines b = B.unlines . map (B.filter (/='\r') . B.take 72) . B.lines $ b
 
 parseError :: Token -> LexAction a
 parseError _ = do
