@@ -49,7 +49,7 @@ $special = [\ \=\+\-\*\/\(\)\,\.\$]
 -- programs out there.
 @idExtended = $letter $alphanumericExtended{0,9} $alphanumericExtended{0,9} $alphanumericExtended{0,9} $alphanumericExtended?
 @id = $letter $alphanumeric{0,5}
-@label = [1-9] $digit{0,4}
+@label = [0-9] $digit{0,4}
 
 @idBI = $letter $alphanumericExtended*
 
