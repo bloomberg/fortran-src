@@ -926,7 +926,15 @@ MAYBE_VARIABLES :: { Maybe (AList Expression A0) }
 : VARIABLES { Just $ fromReverseList $1 } | {- EMPTY -} { Nothing }
 
 VARIABLES :: { [ Expression A0 ] }
-VARIABLES : VARIABLES ',' VARIABLE { $3 : $1 } | VARIABLE { [ $1 ] }
+VARIABLES
+: VARIABLES ',' VARIABLE_OR_STAR { $3 : $1 }
+| VARIABLE_OR_STAR { [ $1 ] }
+
+VARIABLE_OR_STAR :: { Expression A0 }
+VARIABLE_OR_STAR
+: VARIABLE { $1 }
+| '*' { ExpValue () (getSpan $1) ValStar }
+| '&' { ExpValue () (getSpan $1) ValStar }
 
 -- This may also be used to parse a function name, or an array name. Since when
 -- are valid options in a production there is no way of differentiating them at
