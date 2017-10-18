@@ -652,7 +652,8 @@ typeSCChange = do
   where
     f TFunction{} = return True
       -- can be part of function type declaration
-    f TStar{} = return True
+    f TStar{} = lexer f
+    f TInt{} = lexer f
     f _ = return False
 
 toSC :: Int -> LexAction (Maybe Token)
