@@ -515,7 +515,8 @@ PARAMETER_ASSIGNMENT
 
 DECLARATION_STATEMENT :: { Statement A0 }
 DECLARATION_STATEMENT
-: TYPE_SPEC DECLARATORS { StDeclaration () (getTransSpan $1 $2) $1 Nothing (aReverse $2) }
+: TYPE_SPEC ',' DECLARATORS { StDeclaration () (getTransSpan $1 $3) $1 Nothing (aReverse $3) }
+| TYPE_SPEC DECLARATORS { StDeclaration () (getTransSpan $1 $2) $1 Nothing (aReverse $2) }
 
 IMP_LISTS :: { AList ImpList A0 }
 IMP_LISTS
