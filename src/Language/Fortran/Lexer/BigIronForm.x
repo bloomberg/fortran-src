@@ -628,10 +628,14 @@ lexN n = do
   then return $ Just match'
   else
     case alexGetByte alex of
+      Just (w, newAlex) | fromIntegral w == ord '\n' -> do
+        return . Just $! pad match'
       Just (_, newAlex) -> do
         putAlex newAlex
         lexN n
       Nothing -> return Nothing
+ where
+  pad s = s ++ replicate (n - length s) ' '
 
 maybeToKeyword :: LexAction (Maybe Token)
 maybeToKeyword = do
