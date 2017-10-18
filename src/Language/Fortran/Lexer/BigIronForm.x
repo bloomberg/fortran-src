@@ -77,9 +77,9 @@ tokens :-
   <0> . / { \_ ai _ _ -> atColP 6 ai }        { toSC keyword }
   <0> " "                                     ;
 
-  <0,st,keyword,iif,assn> \n                  { resetPar >> toSC 0 >> addSpan TNewline }
-  <0,st,keyword,iif,assn> \r                  ;
-  <0,st,keyword,iif,assn> ";"                 { resetPar >> toSC 0 >> addSpan TNewline }
+  <0,st,keyword,iif,assn,doo> \n              { resetPar >> toSC 0 >> addSpan TNewline }
+  <0,st,keyword,iif,assn,doo> \r              ;
+  <0,st,keyword,iif,assn,doo> ";"             { resetPar >> toSC 0 >> addSpan TNewline }
 
   <st,keyword> "("                            { addSpan TLeftPar }
   <iif> "("                                   { incPar >> addSpan TLeftPar }

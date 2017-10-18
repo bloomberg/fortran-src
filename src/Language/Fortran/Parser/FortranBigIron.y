@@ -279,6 +279,7 @@ DO_STATEMENT
 : do LABEL_IN_STATEMENT DO_SPECIFICATION { StDo () (getTransSpan $1 $3) Nothing (Just $2) (Just $3) }
 | do LABEL_IN_STATEMENT ',' DO_SPECIFICATION { StDo () (getTransSpan $1 $4) Nothing (Just $2) (Just $4) }
 | do DO_SPECIFICATION { StDo () (getTransSpan $1 $2) Nothing Nothing (Just $2) }
+| do { StDo () (getSpan $1) Nothing Nothing Nothing }
 
 DO_SPECIFICATION :: { DoSpecification A0 }
 DO_SPECIFICATION
