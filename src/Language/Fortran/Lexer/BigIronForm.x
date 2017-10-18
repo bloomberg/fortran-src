@@ -11,7 +11,7 @@
 module Language.Fortran.Lexer.BigIronForm where
 
 import Data.Word (Word8)
-import Data.Char (toLower, ord)
+import Data.Char (toLower, ord, isDigit)
 import Data.List (isPrefixOf, any)
 import Data.Maybe (fromJust, isNothing)
 import Data.Data
@@ -235,7 +235,7 @@ tokens :-
 
   -- Strings
   <st> @posIntegerConst "h" / { fortran66P }  { lexHollerith }
-  <st,iif> @posIntegerConst "h" / { bigIronP }    { lexHollerith }
+  <st,iif> @posIntegerConst "h" / { hollerithP }    { lexHollerith }
 
 {
 
@@ -337,6 +337,9 @@ functionP fv _ _ ai = "function" == (reverse . lexemeMatch . aiLexeme $ ai) &&
         TId{} -> lexer f
         TLeftPar{} -> return True
         _ -> return False
+
+hollerithP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
+hollerithP fv _ _ ai = fv == FortranBigIron && isDigit (lookBack 2 ai)
 
 notToP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
 notToP fv _ _ ai = not $ "to" `isPrefixOf` (reverse . lexemeMatch . aiLexeme $ ai)
@@ -897,6 +900,9 @@ takeNChars n ai =
 
 currentChar :: AlexInput -> Char
 currentChar ai = B.index (aiSourceBytes ai) (fromIntegral . posAbsoluteOffset . aiPosition $ ai)
+
+lookBack :: Int -> AlexInput -> Char
+lookBack n ai = B.index (aiSourceBytes ai) (fromIntegral . subtract n . posAbsoluteOffset . aiPosition $ ai)
 
 isContinuation :: AlexInput -> Bool
 isContinuation ai =
