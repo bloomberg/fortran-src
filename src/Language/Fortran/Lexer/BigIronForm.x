@@ -87,7 +87,7 @@ tokens :-
   <iif> ")"                                   { maybeToKeyword >> addSpan TRightPar }
   <st,iif> "(/" / { formatExtendedP }         { addSpan TLeftArrayPar }
   <st,iif> "/)" / { formatExtendedP }         { addSpan TRightArrayPar }
-  <st,iif,keyword> ","                        { addSpan TComma }
+  <st,iif,doo,keyword> ","                    { addSpan TComma }
   <st,iif,keyword> "."                        { addSpan TDot }
   <st,iif> ":" / { fortran77P }               { addSpan TColon }
 
@@ -138,8 +138,9 @@ tokens :-
   <keyword> "dowhile" / { extended77P }       { toSC st >> addSpan TDoWhile }
   <keyword> "enddo" / { extended77P }         { toSC st >> addSpan TEndDo  }
   <keyword> "do"                              { toSC doo >> addSpan TDo }
+  <doo> @integerConst                         { addSpanAndMatch TInt }
+  <doo> "while" / { extended77P }             { toSC st >> addSpan TWhile }
   <doo> @idBI                                 { toSC st >> addSpanAndMatch TId }
-  <doo> @integerConst                         { toSC st >> addSpanAndMatch TInt }
 
   -- Tokens related to I/O statements
   <keyword> "read"                            { toSC st >> addSpan TRead  }
@@ -726,6 +727,7 @@ data Token = TLeftPar             SrcSpan
            | TPause               SrcSpan
            | TDo                  SrcSpan
            | TDoWhile             SrcSpan
+           | TWhile               SrcSpan
            | TEndDo               SrcSpan
            | TRead                SrcSpan
            | TWrite               SrcSpan

@@ -82,6 +82,7 @@ import Debug.Trace
   pause                 { TPause _ }
   do                    { TDo _ }
   doWhile               { TDoWhile _ }
+  while                 { TWhile _ }
   enddo                 { TEndDo _ }
   read                  { TRead _ }
   write                 { TWrite _ }
@@ -298,6 +299,10 @@ EXECUTABLE_STATEMENT
 | endif { StEndif () (getSpan $1) Nothing }
 | doWhile '(' EXPRESSION ')'
   { StDoWhile () (getTransSpan $1 $4) Nothing Nothing $3 }
+| do LABEL_IN_STATEMENT while '(' EXPRESSION ')'
+  { StDoWhile () (getTransSpan $1 $6) Nothing Nothing $5 }
+| do LABEL_IN_STATEMENT ',' while '(' EXPRESSION ')'
+  { StDoWhile () (getTransSpan $1 $7) Nothing Nothing $6 }
 | enddo { StEnddo () (getSpan $1) Nothing }
 | call VARIABLE ARGUMENTS
   { StCall () (getTransSpan $1 $3) $2 $ Just $3 }
