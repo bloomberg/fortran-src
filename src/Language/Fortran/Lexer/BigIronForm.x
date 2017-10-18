@@ -676,6 +676,8 @@ typeSCChange = do
   where
     f TFunction{} = return True
       -- can be part of function type declaration
+    f TLeftPar{} = lexer f
+    f TRightPar{} = lexer f
     f TStar{} = lexer f
     f TInt{} = lexer f
     f _ = return False
