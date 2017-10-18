@@ -179,8 +179,8 @@ tokens :-
   <keyword> "automatic"                       { toSC st >> addSpan TAutomatic  }
 
   -- Tokens related to format statement
-  <keyword> "format"                          { toSC st >> addSpan TFormat  }
-  <st> "(".*")" / { formatP }                 { addSpanAndMatch TBlob }
+  <keyword> "format"                          { toSC fmt >> enterFormat >> addSpan TFormat  }
+  <fmt> "(".*")"                              { toSC st >> exitFormat >> addSpanAndMatch TBlob }
 
   -- Tokens needed to parse integers, reals, double precision and complex
   -- constants
@@ -499,6 +499,16 @@ setCaseInsensitive = do
   ai <- getAlex
   putAlex $ ai { aiCaseSensitive = False }
 
+enterFormat :: LexAction ()
+enterFormat = do
+  ai <- getAlex
+  putAlex $ ai { aiInFormat = True }
+
+exitFormat :: LexAction ()
+exitFormat = do
+  ai <- getAlex
+  putAlex $ ai { aiInFormat = False }
+
 instance Spanned Lexeme where
   getSpan lexeme =
     let ms = lexemeStart lexeme
@@ -809,6 +819,7 @@ data AlexInput = AlexInput
   , aiPreviousToken             :: Maybe Token
   , aiPreviousTokensInLine      :: [ Token ]
   , aiCaseSensitive             :: Bool
+  , aiInFormat                  :: Bool
   } deriving (Show)
 
 instance Loc AlexInput where
@@ -832,6 +843,7 @@ vanillaAlexInput = AlexInput
   , aiPreviousToken = Nothing
   , aiPreviousTokensInLine = [ ]
   , aiCaseSensitive = False
+  , aiInFormat = False
   }
 
 updateLexeme :: Maybe Char -> Position -> AlexInput -> AlexInput
@@ -866,7 +878,7 @@ alexGetByte ai
   -- If we are not parsing a Hollerith skip whitespace
   | _isWhiteInsensitive && _curChar `elem` [ ' ', '\t' ] = skip Char ai
   -- Ignore inline comments
-  | _isWhiteInsensitive && _curChar == '!' = skip Comment ai
+  | _isWhiteInsensitive && not _inFormat && _curChar == '!' = skip Comment ai
   -- Read genuine character and advance. Also covers white sensitivity.
   | otherwise =
       let (_b:_bs) = utf8Encode _curChar in
@@ -888,6 +900,7 @@ alexGetByte ai
     _bytes = aiBytes ai
     _position = aiPosition ai
     _isWhiteInsensitive = aiWhiteSensitiveCharCount ai == 0
+    _inFormat = aiInFormat ai
 
 alexInputPrevChar :: AlexInput -> Char
 alexInputPrevChar ai = aiPreviousChar ai
