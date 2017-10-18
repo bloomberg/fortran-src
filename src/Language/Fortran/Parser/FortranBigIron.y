@@ -18,7 +18,7 @@ import qualified Data.ByteString.Char8 as B
 import Language.Fortran.Util.Position
 import Language.Fortran.Util.ModFile
 import Language.Fortran.ParserMonad
-import Language.Fortran.Lexer.BigIronForm
+import Language.Fortran.Lexer.BigIronForm hiding (Move(..))
 import Language.Fortran.Transformer
 import Language.Fortran.AST
 

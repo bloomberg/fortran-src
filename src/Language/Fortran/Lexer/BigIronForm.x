@@ -848,7 +848,7 @@ updateLexeme maybeChar p ai =
 -- Definitions needed for alexScanUser
 --------------------------------------------------------------------------------
 
-data Move = Continuation | Char | Newline | NewlineComment
+data Move = Continuation | Char | Newline | NewlineComment | Comment
 
 alexGetByte :: AlexInput -> Maybe (Word8, AlexInput)
 alexGetByte ai
@@ -862,6 +862,8 @@ alexGetByte ai
   | _isWhiteInsensitive && isNewlineComment ai = skip NewlineComment ai
   -- If we are not parsing a Hollerith skip whitespace
   | _isWhiteInsensitive && _curChar `elem` [ ' ', '\t' ] = skip Char ai
+  -- Ignore inline comments
+  | _isWhiteInsensitive && _curChar == '!' = skip Comment ai
   -- Read genuine character and advance. Also covers white sensitivity.
   | otherwise =
       let (_b:_bs) = utf8Encode _curChar in
@@ -926,12 +928,21 @@ advance move ai =
     NewlineComment -> --- traceShowId $
       skipCommentLines ai
         position { posAbsoluteOffset = _absl + 1, posColumn = 1, posLine = _line + 1 }
+    Comment -> --- traceShowId $
+      skipComment ai position
   where
     position = aiPosition ai
     _col = posColumn position
     _line = posLine position
     _absl = posAbsoluteOffset position
 
+skipComment :: AlexInput -> Position -> Position
+skipComment ai p =
+  p { posAbsoluteOffset = posAbsoluteOffset p + length line
+    , posColumn = length line
+    }
+  where
+  line = takeLine p ai
 
 skipCommentLines :: AlexInput -> Position -> Position
 skipCommentLines ai p = go p p
