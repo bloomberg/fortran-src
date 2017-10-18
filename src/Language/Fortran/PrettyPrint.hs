@@ -262,11 +262,11 @@ instance IndentablePretty (Block a) where
             then indent i (pprint' v label <+> stDoc)
             else pprint' v mLabel `overlay` indent i stDoc
 
-    pprint v (BlDoWhile _ _ mLabel mName cond body el) i
+    pprint v (BlDoWhile _ _ mLabel tl mName cond body el) i
        | v >= Fortran77Extended =
         labeledIndent mLabel
           (pprint' v mName <?> colon <+>
-          "do while" <+> parens (pprint' v cond) <> newline) <>
+          "do" <+> pprint' v tl <+> "while" <+> parens (pprint' v cond) <> newline) <>
         pprint v body nextI <>
         labeledIndent el ("end do" <+> pprint' v mName <> newline)
       | otherwise = tooOld v "Do while loop" Fortran77Extended

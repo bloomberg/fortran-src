@@ -306,9 +306,9 @@ EXECUTABLE_STATEMENT
 | doWhile '(' EXPRESSION ')'
   { StDoWhile () (getTransSpan $1 $4) Nothing Nothing $3 }
 | do LABEL_IN_STATEMENT while '(' EXPRESSION ')'
-  { StDoWhile () (getTransSpan $1 $6) Nothing Nothing $5 }
+  { StDoWhile () (getTransSpan $1 $6) Nothing (Just $2) $5 }
 | do LABEL_IN_STATEMENT ',' while '(' EXPRESSION ')'
-  { StDoWhile () (getTransSpan $1 $7) Nothing Nothing $6 }
+  { StDoWhile () (getTransSpan $1 $7) Nothing (Just $2) $6 }
 | enddo { StEnddo () (getSpan $1) Nothing }
 | call VARIABLE ARGUMENTS
   { StCall () (getTransSpan $1 $3) $2 $ Just $3 }

@@ -185,6 +185,7 @@ data Block a =
   | BlDoWhile   a SrcSpan
                 (Maybe (Expression a))       -- Label
                 (Maybe String)               -- Construct name
+                (Maybe (Expression a))       -- Target label
                 (Expression a)               -- Condition
                 [ Block a ]                  -- Body
                 (Maybe (Expression a))       -- Label to END DO
@@ -656,20 +657,20 @@ instance Labeled Block where
   getLabel (BlIf _ _ l _ _ _ _) = l
   getLabel (BlCase _ _ l _ _ _ _ _) = l
   getLabel (BlDo _ _ l _ _ _ _ _) = l
-  getLabel (BlDoWhile _ _ l _ _ _ _) = l
+  getLabel (BlDoWhile _ _ l _ _ _ _ _) = l
   getLabel _ = Nothing
 
   getLastLabel b@BlStatement{} = getLabel b
   getLastLabel (BlIf _ _ _ _ _ _ l) = l
   getLastLabel (BlCase _ _ _ _ _ _ _ l) = l
   getLastLabel (BlDo _ _ _ _ _ _ _ l) = l
-  getLastLabel (BlDoWhile _ _ _ _ _ _ l) = l
+  getLastLabel (BlDoWhile _ _ _ _ _ _ _ l) = l
   getLastLabel _ = Nothing
 
   setLabel (BlStatement a s _ st) l = BlStatement a s (Just l) st
   setLabel (BlIf a s _ mn conds bs el) l = BlIf a s (Just l) mn conds bs el
   setLabel (BlDo a s _ mn tl spec bs el) l = BlDo a s (Just l) mn tl spec bs el
-  setLabel (BlDoWhile a s _ n spec bs el) l = BlDoWhile a s (Just l) n spec bs el
+  setLabel (BlDoWhile a s _ n tl spec bs el) l = BlDoWhile a s (Just l) n tl spec bs el
   setLabel b l = b
 
 class Conditioned f where
