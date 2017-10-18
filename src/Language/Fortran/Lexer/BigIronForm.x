@@ -110,6 +110,9 @@ tokens :-
   <keyword> "endmap"                          { toSC st >> addSpan TEndMap  }
   <keyword> "record"                          { toSC st >> addSpan TRecord  }
   <keyword> "end"                             { toSC st >> addSpan TEnd  }
+  <keyword> "endprogram"                      { toSC st >> addSpan TEndProgram  }
+  <keyword> "endfunction"                     { toSC st >> addSpan TEndFunction  }
+  <keyword> "endsubroutine"                   { toSC st >> addSpan TEndSubroutine  }
 
   -- Tokens related to assignment statements
   <keyword> "assign"                          { toSC assn >> addSpan TAssign  }
@@ -680,6 +683,9 @@ data Token = TLeftPar             SrcSpan
            | TRecord              SrcSpan
            | TUnion               SrcSpan
            | TMap                 SrcSpan
+           | TEndProgram          SrcSpan
+           | TEndFunction         SrcSpan
+           | TEndSubroutine       SrcSpan
            | TEndStructure        SrcSpan
            | TEndUnion            SrcSpan
            | TEndMap              SrcSpan

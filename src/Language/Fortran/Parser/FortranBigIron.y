@@ -52,6 +52,9 @@ import Debug.Trace
   program               { TProgram _ }
   function              { TFunction _ }
   subroutine            { TSubroutine _ }
+  endprogram            { TEndProgram _ }
+  endfunction           { TEndFunction _ }
+  endsubroutine         { TEndSubroutine _ }
   blockData             { TBlockData _ }
   structure             { TStructure _ }
   union                 { TUnion _ }
@@ -169,21 +172,44 @@ PROGRAM_INNER
 
 PROGRAM_UNITS :: { [ ProgramUnit A0 ] }
 PROGRAM_UNITS
-: PROGRAM_UNITS PROGRAM_UNIT MAYBE_NEWLINE { $2 : $1 }
-| PROGRAM_UNIT MAYBE_NEWLINE { [ $1 ] }
+: PROGRAM_UNITS LABEL_IN_6COLUMN PROGRAM_UNIT MAYBE_NEWLINE { $3 : $1 }
+| LABEL_IN_6COLUMN PROGRAM_UNIT MAYBE_NEWLINE { [ $2 ] }
 
 PROGRAM_UNIT :: { ProgramUnit A0 }
 PROGRAM_UNIT
 : program NAME NEWLINE BLOCKS end { PUMain () (getTransSpan $1 $5) (Just $2) (reverse $4) Nothing }
-| TYPE_SPEC function NAME MAYBE_ARGUMENTS NEWLINE BLOCKS end
+| TYPE_SPEC function NAME MAYBE_ARGUMENTS NEWLINE BLOCKS ENDPROG
   { PUFunction () (getTransSpan $1 $7) (Just $1) False $3 $4 Nothing (reverse $6) Nothing }
-| function NAME MAYBE_ARGUMENTS NEWLINE BLOCKS end
+| function NAME MAYBE_ARGUMENTS NEWLINE BLOCKS ENDFUN
   { PUFunction () (getTransSpan $1 $6) Nothing False $2 $3 Nothing (reverse $5) Nothing }
-| subroutine NAME MAYBE_ARGUMENTS NEWLINE BLOCKS end
+| subroutine NAME MAYBE_ARGUMENTS NEWLINE BLOCKS ENDSUB
   { PUSubroutine () (getTransSpan $1 $6) False $2 $3 (reverse $5) Nothing }
-| blockData NEWLINE BLOCKS end { PUBlockData () (getTransSpan $1 $4) Nothing (reverse $3) }
-| blockData NAME NEWLINE BLOCKS end { PUBlockData () (getTransSpan $1 $5) (Just $2) (reverse $4) }
+| blockData NEWLINE BLOCKS END { PUBlockData () (getTransSpan $1 $4) Nothing (reverse $3) }
+| blockData NAME NEWLINE BLOCKS END { PUBlockData () (getTransSpan $1 $5) (Just $2) (reverse $4) }
 | comment { let (TComment s c) = $1 in PUComment () s (Comment c) }
+
+END :: { Token }
+END
+: end                 { $1 }
+| LABEL_IN_6COLUMN end { $2 }
+
+ENDPROG :: { Token }
+ENDPROG
+: END                         { $1 }
+| endprogram                  { $1 }
+| LABEL_IN_6COLUMN endprogram { $2 }
+
+ENDFUN :: { Token }
+ENDFUN
+: END                          { $1 }
+| endfunction                  { $1 }
+| LABEL_IN_6COLUMN endfunction { $2 }
+
+ENDSUB :: { Token }
+ENDSUB
+: END                            { $1 }
+| endsubroutine                  { $1 }
+| LABEL_IN_6COLUMN endsubroutine { $2 }
 
 MAYBE_ARGUMENTS :: { Maybe (AList Expression A0) }
 : '(' MAYBE_VARIABLES ')' { $2 }
