@@ -132,9 +132,11 @@ tokens :-
   <keyword> "stop"                            { toSC st >> addSpan TStop  }
   <keyword> "exit" / { extended77P }          { toSC st >> addSpan TExit  }
   <keyword> "pause"                           { toSC st >> addSpan TPause  }
-  <keyword> "do"                              { toSC st >> addSpan TDo }
   <keyword> "dowhile" / { extended77P }       { toSC st >> addSpan TDoWhile }
   <keyword> "enddo" / { extended77P }         { toSC st >> addSpan TEndDo  }
+  <keyword> "do"                              { toSC doo >> addSpan TDo }
+  <doo> @idBI                                 { toSC st >> addSpanAndMatch TId }
+  <doo> @integerConst                         { toSC st >> addSpanAndMatch TInt }
 
   -- Tokens related to I/O statements
   <keyword> "read"                            { toSC st >> addSpan TRead  }
