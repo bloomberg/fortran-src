@@ -770,7 +770,10 @@ ARGUMENTS_LEVEL1
 -- Expression all by itself subsumes all other callable expressions.
 CALLABLE_EXPRESSION :: { Argument A0 }
 CALLABLE_EXPRESSION
-: EXPRESSION  { Argument () (getSpan $1) Nothing $1 }
+: id '=' EXPRESSION
+  { let TId span keyword = $1
+    in Argument () (getTransSpan span $3) (Just keyword) $3 }
+| EXPRESSION  { Argument () (getSpan $1) Nothing $1 }
 
 EXPRESSION :: { Expression A0 }
 EXPRESSION
