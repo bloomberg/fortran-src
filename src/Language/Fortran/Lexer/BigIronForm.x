@@ -165,7 +165,7 @@ tokens :-
   <keyword> "character" / { fortran77P }      { typeSCChange >> addSpanAndMatch TType }
   <st> "character" / { implicitType77P }      { addSpanAndMatch TType }
   <keyword> "implicit" / { fortran77P }       { toSC st >> addSpan TImplicit  }
-  <st> "none" / { fortran77P }                { addSpan TNone  }
+  <st> "none" / { implicitType77P }           { addSpan TNone  }
   <keyword> "parameter" / { fortran77P }      { toSC st >> addSpan TParameter  }
   <keyword> "entry" / { fortran77P }          { toSC st >> addSpan TEntry  }
   <keyword> "pointer" / { bigIronP }          { toSC st >> addSpan TPointer  }
