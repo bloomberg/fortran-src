@@ -79,6 +79,7 @@ import Debug.Trace
   continue              { TContinue _ }
   stop                  { TStop _ }
   exit                  { TExit _ }
+  cycle                 { TCycle _ }
   pause                 { TPause _ }
   do                    { TDo _ }
   doWhile               { TDoWhile _ }
@@ -315,6 +316,7 @@ EXECUTABLE_STATEMENT
 | stop INTEGER_OR_STRING { StStop () (getTransSpan $1 $2) $ Just $2 }
 | stop { StStop () (getSpan $1) Nothing }
 | exit { StExit () (getSpan $1) Nothing }
+| cycle { StCycle () (getSpan $1) Nothing }
 | pause INTEGER_OR_STRING { StPause () (getTransSpan $1 $2) $ Just $2 }
 | pause { StPause () (getSpan $1) Nothing }
 -- IO Statements

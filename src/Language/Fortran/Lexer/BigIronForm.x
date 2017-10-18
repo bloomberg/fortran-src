@@ -134,6 +134,7 @@ tokens :-
   <keyword> "continue"                        { toSC st >> addSpan TContinue  }
   <keyword> "stop"                            { toSC st >> addSpan TStop  }
   <keyword> "exit" / { extended77P }          { toSC st >> addSpan TExit  }
+  <keyword> "cycle" / { bigIronP }            { toSC st >> addSpan TCycle  }
   <keyword> "pause"                           { toSC st >> addSpan TPause  }
   <keyword> "dowhile" / { extended77P }       { toSC st >> addSpan TDoWhile }
   <keyword> "enddo" / { extended77P }         { toSC st >> addSpan TEndDo  }
@@ -724,6 +725,7 @@ data Token = TLeftPar             SrcSpan
            | TSave                SrcSpan
            | TContinue            SrcSpan
            | TStop                SrcSpan
+           | TCycle               SrcSpan
            | TExit                SrcSpan
            | TPause               SrcSpan
            | TDo                  SrcSpan
