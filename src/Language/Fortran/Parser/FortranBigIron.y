@@ -80,6 +80,10 @@ import Debug.Trace
   stop                  { TStop _ }
   exit                  { TExit _ }
   cycle                 { TCycle _ }
+  case                  { TCase _ }
+  selectcase            { TSelectCase _ }
+  endselect             { TEndSelect _ }
+  casedefault           { TCaseDefault _ }
   pause                 { TPause _ }
   do                    { TDo _ }
   doWhile               { TDoWhile _ }
@@ -319,6 +323,19 @@ EXECUTABLE_STATEMENT
 | cycle { StCycle () (getSpan $1) Nothing }
 | pause INTEGER_OR_STRING { StPause () (getTransSpan $1 $2) $ Just $2 }
 | pause { StPause () (getSpan $1) Nothing }
+| selectcase '(' EXPRESSION ')'
+  { StSelectCase () (getTransSpan $1 $4) Nothing $3 }
+| casedefault { StCase () (getSpan $1) Nothing Nothing }
+| casedefault id
+  { let TId s id = $2 in StCase () (getTransSpan $1 s) (Just id) Nothing }
+| case '(' INDICIES ')'
+  { StCase () (getTransSpan $1 $4) Nothing (Just $ fromReverseList $3) }
+| case '(' INDICIES ')' id
+  { let TId s id = $5
+    in StCase () (getTransSpan $1 s) (Just id) (Just $ fromReverseList $3) }
+| endselect { StEndcase () (getSpan $1) Nothing }
+| endselect id
+  { let TId s id = $2 in StEndcase () (getTransSpan $1 s) (Just id) }
 -- IO Statements
 | read CILIST IN_IOLIST { StRead () (getTransSpan $1 $3) $2 (Just $ aReverse $3) }
 | read CILIST { StRead () (getTransSpan $1 $2) $2 Nothing }
@@ -1065,6 +1082,7 @@ transformations =
   [ GroupLabeledDo
   , GroupDo
   , GroupIf
+  , GroupCase
   , DisambiguateIntrinsic
   , DisambiguateFunction
   ]

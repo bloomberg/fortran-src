@@ -135,6 +135,10 @@ tokens :-
   <keyword> "stop"                            { toSC st >> addSpan TStop  }
   <keyword> "exit" / { extended77P }          { toSC st >> addSpan TExit  }
   <keyword> "cycle" / { bigIronP }            { toSC st >> addSpan TCycle  }
+  <keyword> "case" / { bigIronP }             { toSC st >> addSpan TCase  }
+  <keyword> "casedefault" / { bigIronP }      { toSC st >> addSpan TCaseDefault  }
+  <keyword> "selectcase" / { bigIronP }       { toSC st >> addSpan TSelectCase  }
+  <keyword> "endselect" / { bigIronP }        { toSC st >> addSpan TEndSelect  }
   <keyword> "pause"                           { toSC st >> addSpan TPause  }
   <keyword> "dowhile" / { extended77P }       { toSC st >> addSpan TDoWhile }
   <keyword> "enddo" / { extended77P }         { toSC st >> addSpan TEndDo  }
@@ -727,6 +731,10 @@ data Token = TLeftPar             SrcSpan
            | TStop                SrcSpan
            | TCycle               SrcSpan
            | TExit                SrcSpan
+           | TCase                SrcSpan
+           | TCaseDefault         SrcSpan
+           | TSelectCase          SrcSpan
+           | TEndSelect           SrcSpan
            | TPause               SrcSpan
            | TDo                  SrcSpan
            | TDoWhile             SrcSpan
