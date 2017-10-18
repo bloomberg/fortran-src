@@ -334,13 +334,13 @@ FORMAT_ID
 -- There should be FUNCTION_CALL here but as far as the parser is concerned it is same as SUBSCRIPT,
 -- hence putting it here would cause a reduce/reduce conflict.
 | SUBSCRIPT                     { $1 }
-| VARIABLE                      { $1 }
+-- | VARIABLE                      { $1 }
 | '*' { ExpValue () (getSpan $1) ValStar }
 
 UNIT :: { Expression A0 }
 UNIT
 : INTEGER_LITERAL { $1 }
-| VARIABLE { $1 }
+-- | VARIABLE { $1 }
 | SUBSCRIPT { $1 }
 | '*' { ExpValue () (getSpan $1) ValStar }
 
@@ -403,7 +403,7 @@ CI_EXPRESSION
 -- There should be FUNCTION_CALL here but as far as the parser is concerned it is same as SUBSCRIPT,
 -- hence putting it here would cause a reduce/reduce conflict.
 | SUBSCRIPT                     { $1 }
-| VARIABLE                      { $1 }
+-- | VARIABLE                      { $1 }
 
 -- Input IOList used in read like statements is much more restrictive as it
 -- doesn't make sense to read into an integer.
@@ -417,8 +417,8 @@ IN_IOLIST
 
 IN_IO_ELEMENT :: { Expression A0 }
 IN_IO_ELEMENT
-: VARIABLE { $1 }
-| SUBSCRIPT { $1 }
+-- : VARIABLE { $1 }
+: SUBSCRIPT { $1 }
 | '(' IN_IOLIST ',' DO_SPECIFICATION ')' { ExpImpliedDo () (getTransSpan $1 $5) (aReverse $2) $4 }
 
 OUT_IOLIST :: { AList Expression A0 }
@@ -575,16 +575,16 @@ IMP_ELEMENT
              else return $ ImpRange () (getTransSpan $1 $3) id1 id2
              }
 
+-- ELEMENT :: { Expression A0 }
+-- ELEMENT
+-- : ELEMENT '.' ELEMENT_SEGMENT
+--   { ExpDataRef () (getTransSpan $1 $3) $1 $3 }
+-- | ELEMENT_SEGMENT { $1 }
+
 ELEMENT :: { Expression A0 }
 ELEMENT
-: ELEMENT '.' ELEMENT_SEGMENT
-  { ExpDataRef () (getTransSpan $1 $3) $1 $3 }
-| ELEMENT_SEGMENT { $1 }
-
-ELEMENT_SEGMENT :: { Expression A0 }
-ELEMENT_SEGMENT
-: VARIABLE { $1 }
-| SUBSCRIPT { $1 }
+: SUBSCRIPT { $1 }
+-- | VARIABLE { $1 }
 
 DATA_GROUPS :: { [DataGroup A0] }
 DATA_GROUPS
@@ -790,9 +790,8 @@ EXPRESSION
 | HOLLERITH                         { $1 }
 -- There should be FUNCTION_CALL here but as far as the parser is concerned it is same as SUBSCRIPT,
 -- hence putting it here would cause a reduce/reduce conflict.
---- | SUBSCRIPT                         { $1 }
---- | VARIABLE                          { $1 }
-| ELEMENT                           { $1 }
+| SUBSCRIPT                         { $1 }
+-- | VARIABLE                          { $1 }
 | IMPLIED_DO                        { $1 }
 | '(/' EXPRESSION_LIST '/)' {
     let { exps = reverse $2;
@@ -842,8 +841,9 @@ CONSTANT_EXPRESSION
 | '(' CONSTANT_EXPRESSION ',' CONSTANT_EXPRESSION ')' { ExpValue () (getTransSpan $1 $5) (ValComplex $2 $4)}
 | LOGICAL_LITERAL               { $1 }
 | string                        { let (TString s cs) = $1 in ExpValue () s (ValString cs) }
-| VARIABLE                     { $1 }
+-- | VARIABLE                     { $1 }
 | SUBSCRIPT                    { $1 }
+| HOLLERITH                    { $1 }
 
 ARITHMETIC_CONSTANT_EXPRESSION :: { Expression A0 }
 ARITHMETIC_CONSTANT_EXPRESSION
@@ -869,7 +869,15 @@ RELATIONAL_OPERATOR
 
 SUBSCRIPT :: { Expression A0 }
 SUBSCRIPT
-: VARIABLE '(' ')'
+: SUBSCRIPT '.' SUBSCRIPT_ITEM
+  { ExpDataRef () (getTransSpan $1 $3) $1 $3 }
+| SUBSCRIPT_ITEM
+  { $1 }
+
+SUBSCRIPT_ITEM :: { Expression A0 }
+SUBSCRIPT_ITEM
+: VARIABLE { $1 }
+| VARIABLE '(' ')'
   { ExpFunctionCall () (getTransSpan $1 $3) $1 Nothing }
 | VARIABLE '(' INDICIES ')'
   { ExpSubscript () (getTransSpan $1 $4) $1 (fromReverseList $3) }
