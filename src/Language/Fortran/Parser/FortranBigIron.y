@@ -126,6 +126,7 @@ import Debug.Trace
   '**'                  { TOpExp _ }
   '*'                   { TStar _ }
   '/'                   { TSlash _ }
+  '&'                   { TAmpersand _ }
   eqv                   { TOpEquivalent _ }
   neqv                  { TOpNotEquivalent _ }
   or                    { TOpOr _ }
@@ -813,6 +814,8 @@ EXPRESSION
     in ExpInitialisation () (getTransSpan $1 $3) expList
           }
 | val '(' EXPRESSION ')' { ExpByValue () (getTransSpan $1 $4) $3 }
+| '*' INTEGER_LITERAL { ExpReturnSpec () (getTransSpan $1 $2) $2 }
+| '&' INTEGER_LITERAL { ExpReturnSpec () (getTransSpan $1 $2) $2 }
 
 IMPLIED_DO :: { Expression A0 }
 IMPLIED_DO

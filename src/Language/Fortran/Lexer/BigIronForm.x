@@ -205,6 +205,7 @@ tokens :-
     -- can be part of function type declaration
   <st,iif,keyword> "*"                        { addSpan TStar  }
   <st,iif> "/"                                { addSpan TSlash  }
+  <st,iif> "&"                                { addSpan TAmpersand  }
 
   -- Logical operators
   <st,iif> ".or."                             { addSpan TOpOr  }
@@ -764,6 +765,7 @@ data Token = TLeftPar             SrcSpan
            | TOpExp               SrcSpan
            | TStar                SrcSpan
            | TSlash               SrcSpan
+           | TAmpersand           SrcSpan
            | TOpOr                SrcSpan
            | TOpAnd               SrcSpan
            | TOpNot               SrcSpan
