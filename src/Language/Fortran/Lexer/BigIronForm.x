@@ -40,7 +40,7 @@ $bit = 0-1
 @octal = o\'$octalDigit+\' | \'$octalDigit+\'o
 @hex = x\'$hexDigit+\' | \'$hexDigit+\'x | z\'$hexDigit+\' | \'$hexDigit+\'z
 
-$letter = [a-z]
+$letter = [a-z _]
 $alphanumeric = [$letter $digit]
 $alphanumericExtended = [$letter $digit \_ \$]
 $special = [\ \=\+\-\*\/\(\)\,\.\$]
