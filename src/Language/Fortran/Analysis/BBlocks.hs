@@ -213,7 +213,7 @@ insExitEdges pu lm gr = flip insEdges (insNode (-1, bs) gr) $ do
 -- Find target of Goto statements (Return statements default target to -1).
 examineFinalBlock lm bs@(_:_)
   | BlStatement _ _ _ (StGotoUnconditional _ _ k) <- last bs = [lookupBBlock lm k]
-  | BlStatement _ _ _ (StGotoAssigned _ _ _ ks)   <- last bs = map (lookupBBlock lm) (aStrip ks)
+  | BlStatement _ _ _ (StGotoAssigned _ _ _ ks)   <- last bs = map (lookupBBlock lm) (maybe [] aStrip ks)
   | BlStatement _ _ _ (StGotoComputed _ _ ks _)   <- last bs = map (lookupBBlock lm) (aStrip ks)
   | BlStatement _ _ _ (StReturn _ _ _)            <- last bs = [-1]
   | BlStatement _ _ _ (StIfArithmetic _ _ _ k1 k2 k3) <- last bs =
