@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Language.Fortran.Util.JSON where
 
+import Prelude hiding (Ordering(..))
 import Data.Aeson.Types (ToJSON(..), object, (.=), Pair, Options(..), defaultOptions
                         ,camelTo2, genericToJSON, SumEncoding(..))
 import qualified Data.Aeson.Types as J
@@ -120,8 +121,9 @@ instance ToJSON a => ToJSON (Statement a) where
       ["span" .= s, "groups" .= args]
     StEquivalence _ s args -> tag "equivalence"
       ["span" .= s, "groups" .= args]
-    StFormat _ s fmts -> tag "format"
-      ["span" .= s, "items" .= fmts]
+    StFormat{} -> error "unexpected StFormat"
+    -- StFormat _ s fmts -> tag "format"
+    --   ["span" .= s, "items" .= fmts]
     StImplicit _ s itms -> tag "implicit"
       ["span" .= s, "items" .= itms]
     StEntry _ s v args _ -> tag "entry"
@@ -220,35 +222,130 @@ instance ToJSON a => ToJSON (Argument a) where
     ["span" .= s, "name" .= name, "expression" .= exp]
 
 instance ToJSON a => ToJSON (Attribute a) where
-
-instance ToJSON Intent where
+  toJSON attr = case attr of
+    AttrParameter _ s -> tag "parameter" ["span" .= s]
+    AttrPublic{} -> error "unexpected AttrPublic"
+    AttrPrivate{} -> error "unexpected AttrPrivate"
+    AttrAllocatable{} -> error "unexpected AttrAllocatable"
+    AttrDimension _ s dims -> tag "parameter" ["span" .= s, "dimensions" .= dims]
+    AttrExternal _ s -> tag "external" ["span" .= s]
+    AttrIntent{} -> error "unexpected AttrIntent"
+    AttrOptional{} -> error "unexpected AttrOptional"
+    AttrPointer _ s -> tag "pointer" ["span" .= s]
+    AttrSave _ s -> tag "save" ["span" .= s]
+    AttrTarget{} -> error "unexpected AttrTarget"
 
 instance ToJSON a => ToJSON (ControlPair a) where
+  toJSON (ControlPair _ s name exp) = tag "control_pair"
+    ["span" .= s, "id" .= name, "expression" .= exp]
 
 instance ToJSON a => ToJSON (ImpList a) where
+  toJSON (ImpList _ s t itms) = tag "implicit_spec"
+    ["span" .= s, "type" .= t, "names" .= itms]
 
 instance ToJSON a => ToJSON (ImpElement a) where
+  toJSON imp = case imp of
+    ImpCharacter _ s c -> tag "implicit_char"
+      ["span" .= s, "char" .= c]
+    ImpRange _ s c1 c2  -> tag "implicit_range"
+      ["span" .= s, "lower" .= c1, "upper" .= c2]
 
 instance ToJSON a => ToJSON (CommonGroup a) where
+  toJSON (CommonGroup _ s name exps) = tag "common_group"
+    ["span" .= s, "common_name" .= name, "expressions" .= exps]
 
 instance ToJSON a => ToJSON (DataGroup a) where
+  toJSON (DataGroup _ s names exps) = tag "data_group"
+    ["span" .= s, "names" .= names, "initializers" .= exps]
 
 instance ToJSON a => ToJSON (UnionMap a) where
-
-instance ToJSON a => ToJSON (FormatItem a) where
+  toJSON (UnionMap _ s stmts) = tag "union_map"
+    ["span" .= s, "declarations" .= stmts]
 
 instance ToJSON a => ToJSON (DoSpecification a) where
+  toJSON (DoSpecification _ s init lim incr) = tag "do_spec"
+    ["span" .= s, "initial" .= init, "limit" .= lim, "increment" .= incr]
 
 instance ToJSON a => ToJSON (Expression a) where
+  toJSON exp = case exp of
+    ExpValue _ s val -> tag "value"
+      ["span" .= s, "value" .= val]
+    ExpBinary _ s b e1 e2 -> tag "binary_op"
+      ["span" .= s, "binary_op" .= b, "left" .= e1, "right" .= e2]
+    ExpUnary _ s u e -> tag "unary_op"
+      ["span" .= s, "unary_op" .= u, "expression" .= e]
+    ExpSubscript _ s e idxs -> tag "subscript"
+      ["span" .= s, "expression" .= e, "indices" .= idxs]
+    ExpDataRef _ s e1 e2 -> tag "deref"
+      ["span" .= s, "expression" .= e1, "field" .= e2]
+    ExpFunctionCall _ s fn args -> tag "function_call"
+      ["span" .= s, "function" .= fn, "arguments" .= args]
+    ExpImpliedDo _ s exps spec -> tag "implied_do"
+      ["span" .= s, "expressions" .= exps, "do_spec" .= spec]
+    ExpInitialisation _ s exps -> tag "initialisation"
+      ["span" .= s, "expressions" .= exps]
+    ExpReturnSpec _ s tgt -> tag "return_spec"
+      ["span" .= s, "target" .= exp]
+    ExpByValue _ s exp -> tag "%val"
+      ["span" .= s, "expression" .= exp]
 
 instance ToJSON a => ToJSON (Index a) where
+  toJSON idx = case idx of
+    IxSingle _ s _ e -> tag "index_single"
+      ["span" .= s, "index" .= e]
+    IxRange _ s l u st -> tag "index_range"
+      ["span" .= s, "lower" .= l, "upper" .= u, "stride" .= st]
 
 instance ToJSON a => ToJSON (Value a) where
+  toJSON v = case v of
+    ValInteger i -> tag "integer" ["value" .= i]
+    ValReal i -> tag "real" ["value" .= i]
+    ValComplex r i -> tag "complex" ["real" .= r, "imaginary" .= i]
+    ValString i -> tag "string" ["value" .= i]
+    ValHollerith i -> tag "hollerith" ["value" .= i]
+    ValVariable i -> tag "variable" ["value" .= i]
+    ValIntrinsic{} -> error "unexpected ValIntrinsic"
+    ValLogical i -> tag "logical" ["value" .= i]
+    ValOperator{} -> error "unexpected ValOperator"
+    ValAssignment{} -> error "unexpected ValAssignment"
+    ValType{} -> error "unexpected ValType"
+    ValStar{} -> tag "star" []
 
 instance ToJSON a => ToJSON (Declarator a) where
+  toJSON decl = case decl of
+    DeclVariable _ s v len init -> tag "decl_variable"
+      ["span" .= s, "variable" .= v, "length" .= len, "initial" .= init]
+    DeclArray _ s arr dims len init -> tag "decl_array"
+      ["span" .= s, "array" .= arr, "dimensions" .= dims, "length" .= len, "initial" .= init]
 
 instance ToJSON a => ToJSON (DimensionDeclarator a) where
+  toJSON (DimensionDeclarator _ s l u) = tag "dimension"
+    ["span" .= s, "lower" .= l, "upper" .= u]
 
 instance ToJSON UnaryOp where
+  toJSON u = case u of
+    Plus -> tag "plus" []
+    Minus -> tag "minus" []
+    Not -> tag "not" []
+    UnCustom{} -> error "unexpected UnCustom"
 
 instance ToJSON BinaryOp where
+  toJSON b = case b of
+    Addition -> tag "+" []
+    Subtraction -> tag "-" []
+    Multiplication -> tag "*" []
+    Division -> tag "/" []
+    Exponentiation -> tag "**" []
+    Concatenation -> tag "//" []
+    GT -> tag ">" []
+    GTE -> tag ">=" []
+    LT -> tag "<" []
+    LTE -> tag "<=" []
+    EQ -> tag "==" []
+    NE -> tag "!=" []
+    Or -> tag "or" []
+    XOr -> tag "xor" []
+    And -> tag "and" []
+    Equivalent -> tag "eqv" []
+    NotEquivalent -> tag "neqv" []
+    BinCustom{} -> error "unexpected BinCustom"
