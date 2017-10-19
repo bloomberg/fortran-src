@@ -48,6 +48,7 @@ import Debug.Trace
   ','                   { TComma _ }
   '.'                   { TDot _ }
   ':'                   { TColon _ }
+  '::'                  { TDoubleColon _ }
   include               { TInclude _ }
   program               { TProgram _ }
   function              { TFunction _ }
@@ -145,6 +146,8 @@ import Debug.Trace
   '=='                  { TOpEQ _ }
   '!='                  { TOpNE _ }
   id                    { TId _ _ }
+  len                   { TLen _ }
+  kind                  { TKind _ }
   comment               { TComment _ _ }
   hollerith             { THollerith _ _ }
   string                { TString _ _ }
@@ -575,8 +578,24 @@ PARAMETER_ASSIGNMENT
 
 DECLARATION_STATEMENT :: { Statement A0 }
 DECLARATION_STATEMENT
-: TYPE_SPEC ',' DECLARATORS { StDeclaration () (getTransSpan $1 $3) $1 Nothing (aReverse $3) }
-| TYPE_SPEC DECLARATORS { StDeclaration () (getTransSpan $1 $2) $1 Nothing (aReverse $2) }
+: TYPE_SPEC DECLARATORS { StDeclaration () (getTransSpan $1 $2) $1 Nothing (aReverse $2) }
+| TYPE_SPEC ATTRIBUTE_LIST '::' PARAMETER_ASSIGNMENTS
+  { let attrs = if null $2 then Nothing else Just (fromReverseList $2) in
+    StDeclaration () (getTransSpan $1 $4) $1 attrs (fromReverseList $4) }
+
+ATTRIBUTE_LIST :: { [ Attribute A0 ] }
+: ATTRIBUTE_LIST ',' ATTRIBUTE_SPEC { $3 : $1 }
+| ATTRIBUTE_SPEC { [ $1 ] }
+| {- EMPTY -} { [ ] }
+
+ATTRIBUTE_SPEC :: { Attribute A0 }
+: dimension '(' DIMENSION_DECLARATORS ')'
+  { AttrDimension () (getTransSpan $1 $4) $3 }
+| external { AttrExternal () (getSpan $1) }
+| intrinsic { AttrIntrinsic () (getSpan $1) }
+| pointer { AttrPointer () (getSpan $1) }
+| parameter { AttrParameter () (getSpan $1) }
+| save { AttrSave () (getSpan $1) }
 
 IMP_LISTS :: { AList ImpList A0 }
 IMP_LISTS
@@ -1034,19 +1053,38 @@ TYPE_SPEC
 
 KIND_SELECTOR :: { Maybe (Selector A0) }
 KIND_SELECTOR
+: KIND_SELECTOR1 MAYBE_COMMA
+  { Just $1 }
+| {- EMPTY -}
+  { Nothing }
+
+KIND_SELECTOR1 :: { Selector A0 }
+KIND_SELECTOR1
 : '*' ARITHMETIC_CONSTANT_EXPRESSION
-  { Just $ Selector () (getTransSpan $1 $2) Nothing (Just $2) }
-| '*' '(' STAR ')' { Just $ Selector () (getTransSpan $1 $4) Nothing (Just $3) }
-| {- EMPTY -} { Nothing }
+  { Selector () (getTransSpan $1 $2) Nothing (Just $2) }
+| '*' '(' STAR ')' { Selector () (getTransSpan $1 $4) Nothing (Just $3) }
 
 CHAR_SELECTOR :: { Maybe (Selector A0) }
-CHAR_SELECTOR
+: CHAR_SELECTOR1 MAYBE_COMMA
+  { Just $1 }
+| {- EMPTY -}
+  { Nothing }
+
+CHAR_SELECTOR1 :: { Selector A0 }
+CHAR_SELECTOR1
 : '(' LEN_EXPRESSION ')'
-  { Just $ Selector () (getTransSpan $1 $3) (Just $2) Nothing }
+  { Selector () (getTransSpan $1 $3) (Just $2) Nothing }
 | '*' ARITHMETIC_CONSTANT_EXPRESSION
-  { Just $ Selector () (getTransSpan $1 $2) (Just $2) Nothing }
-| '*' '(' STAR ')' { Just $ Selector () (getTransSpan $1 $4) (Just $3) Nothing }
-| {- EMPTY -} { Nothing }
+  { Selector () (getTransSpan $1 $2) (Just $2) Nothing }
+| '*' '(' STAR ')'
+  { Selector () (getTransSpan $1 $4) (Just $3) Nothing }
+| '(' len '=' LEN_EXPRESSION ')'
+  { Selector () (getTransSpan $1 $5) (Just $4) Nothing }
+
+MAYBE_COMMA :: { Maybe Token }
+MAYBE_COMMA
+: ','         { Just $1 }
+| {- empty -} { Nothing }
 
 LEN_EXPRESSION :: { Expression A0 }
 LEN_EXPRESSION

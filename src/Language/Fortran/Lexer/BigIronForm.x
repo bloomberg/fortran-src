@@ -90,6 +90,7 @@ tokens :-
   <st,iif,doo,keyword> ","                    { addSpan TComma }
   <st,iif,keyword> "."                        { addSpan TDot }
   <st,iif> ":" / { fortran77P }               { addSpan TColon }
+  <st,iif> "::" / { bigIronP }                { addSpan TDoubleColon }
 
   <keyword> @id / { idP }                     { toSC st >> addSpanAndMatch TId }
   <keyword> @idExtended / { extendedIdP }     { toSC st >> addSpanAndMatch TId }
@@ -169,6 +170,15 @@ tokens :-
   <keyword> "intrinsic" / { fortran77P }      { toSC st >> addSpan TIntrinsic  }
   <keyword> @datatype                         { typeSCChange >> addSpanAndMatch TType }
   <st> @datatype / { implicitStP }            { addSpanAndMatch TType }
+  <st> "kind" / { selectorP }                 { addSpan TKind }
+  <st> "len" / { selectorP }                  { addSpan TLen }
+  <st> "dimension" / { attributeP }           { addSpan TDimension  }
+  <st> "external"  / { attributeP }           { addSpan TExternal  }
+  <st> "intrinsic" / { attributeP }           { addSpan TIntrinsic  }
+  <st> "parameter" / { attributeP }           { addSpan TParameter  }
+  <st> "pointer" / { attributeP }             { addSpan TPointer  }
+  <st> "save" / { attributeP }                { addSpan TSave  }
+
   <keyword> "doublecomplex" / { extended77P } { typeSCChange >> addSpanAndMatch TType }
   <st> "doublecomplex" / { implicitTypeExtendedP }  { addSpanAndMatch TType }
   <keyword> "character" / { fortran77P }      { typeSCChange >> addSpanAndMatch TType }
@@ -448,6 +458,54 @@ extended77P fv _ _ _ = fv == Fortran77Extended || fv == FortranBigIron
 bigIronP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
 bigIronP fv _ _ _ = fv == FortranBigIron
 
+attributeP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
+attributeP _ _ _ ai =  followsComma && precedesDoubleColon ai && startsWithTypeSpec
+  where
+    followsComma
+      | Just TComma{} <- aiPreviousToken ai = True
+      | otherwise = False
+    startsWithTypeSpec
+      | (token:_) <- prevTokens =
+        isTypeSpec token
+      | otherwise = False
+    prevTokens = reverse . aiPreviousTokensInLine $ ai
+
+selectorP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
+selectorP fv _ _ ai = fv == FortranBigIron &&
+    followsType && nextTokenIsOpAssign && precedesDoubleColon ai
+  where
+    nextTokenIsOpAssign = nextTokenConstr fv ai == (Just . fillConstr $ TOpAssign)
+    followsType =
+      case searchBeforePar (aiPreviousTokensInLine ai) of
+        Just x -> isTypeSpec x
+        Nothing -> False
+    searchBeforePar [] = Nothing
+    searchBeforePar (x:xs)
+      | TLeftPar{} <- x = if null xs then Nothing else (Just $ head xs)
+      | otherwise = searchBeforePar xs
+
+nextTokenConstr :: FortranVersion -> AlexInput -> Maybe Constr
+nextTokenConstr fv ai =
+    case unParse lexer' parseState of
+      ParseOk token _ -> Just $ toConstr token
+      _ -> Nothing
+  where
+    parseState = ParseState
+      { psAlexInput = ai
+      , psParanthesesCount = ParanthesesCount 0 False
+      , psVersion = fv
+      , psFilename = "<unknown>"
+      , psContext = [ ConStart ] }
+
+precedesDoubleColon :: AlexInput -> Bool
+precedesDoubleColon ai = not . flip seenConstr ai . fillConstr $ TDoubleColon
+
+fillConstr = toConstr . ($ undefined)
+
+seenConstr :: Constr -> AlexInput -> Bool
+seenConstr candidateConstr ai =
+  candidateConstr `elem` (toConstr <$> aiPreviousTokensInLine ai)
+
 --------------------------------------------------------------------------------
 -- Lexer helpers
 --------------------------------------------------------------------------------
@@ -702,6 +760,7 @@ data Token = TLeftPar             SrcSpan
            | TComma               SrcSpan
            | TDot                 SrcSpan
            | TColon               SrcSpan
+           | TDoubleColon         SrcSpan
            | TInclude             SrcSpan
            | TProgram             SrcSpan
            | TFunction            SrcSpan
@@ -796,6 +855,8 @@ data Token = TLeftPar             SrcSpan
            | TString              SrcSpan String
            | THollerith           SrcSpan String
            | TLabel               SrcSpan String
+           | TKind               SrcSpan
+           | TLen                SrcSpan
            | TNewline             SrcSpan
            | TEOF                 SrcSpan
            deriving (Show, Eq, Ord, Data, Typeable, Generic)
@@ -808,6 +869,29 @@ instance FirstParameter Token SrcSpan => Spanned Token where
 instance Tok Token where
   eofToken (TEOF _) = True
   eofToken _ = False
+
+class SpecifiesType a where
+  isTypeSpec :: a -> Bool
+
+instance SpecifiesType Token where
+  isTypeSpec TType{} = True
+  isTypeSpec _ = False
+
+instance SpecifiesType [ Token ] where
+  isTypeSpec tokens
+    | [ TType{}, TLeftPar{}, _, TRightPar{} ] <- tokens = True
+    -- This is an approximation but should hold for almost all legal programs.
+    | (typeToken:TLeftPar{}:rest) <- tokens =
+      isTypeSpec typeToken &&
+      case last rest of
+        TRightPar{} -> True
+        _ -> False
+    | (TType{}:TStar{}:rest) <- tokens =
+      case rest of
+        [ TInt{} ] -> True
+        (TLeftPar{}:rest') | TRightPar{} <- last rest' -> True
+        _ -> False
+    | otherwise = False
 
 --------------------------------------------------------------------------------
 -- AlexInput & related definitions
