@@ -1138,7 +1138,7 @@ transformations =
   , GroupIf
   , GroupCase
   , DisambiguateIntrinsic
-  , DisambiguateFunction
+  -- , DisambiguateFunction
   ]
 bigIronParser ::
     B.ByteString -> String -> ParseResult AlexInput Token (ProgramFile A0)

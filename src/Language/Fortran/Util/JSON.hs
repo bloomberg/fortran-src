@@ -304,7 +304,7 @@ instance ToJSON a => ToJSON (Value a) where
     ValString i -> tag "string" ["value" .= i]
     ValHollerith i -> tag "hollerith" ["value" .= i]
     ValVariable i -> tag "variable" ["value" .= i]
-    ValIntrinsic{} -> error "unexpected ValIntrinsic"
+    ValIntrinsic i -> tag "intrinsic" ["value" .= i]
     ValLogical i -> tag "logical" ["value" .= i]
     ValOperator{} -> error "unexpected ValOperator"
     ValAssignment{} -> error "unexpected ValAssignment"
