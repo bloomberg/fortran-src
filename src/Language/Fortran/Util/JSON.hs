@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 module Language.Fortran.Util.JSON where
@@ -21,19 +22,29 @@ jsonOptions = defaultOptions
 tag :: Text -> [Pair] -> J.Value
 tag t kvs = object $ ["tag" .= t] ++ kvs
 
-instance ToJSON Position where
-  toJSON (Position _ col line) = object
-    [ "column" .= col, "line" .= line ]
+-- instance ToJSON Position where
+--   toJSON (Position _ col line) = object
+--     [ "column" .= col, "line" .= line ]
 
 instance ToJSON SrcSpan where
-  toJSON (SrcSpan start end) = object
-    [ "start" .= start, "end" .= end ]
+  toJSON = toJSON . show
+  -- toJSON (SrcSpan start end) = object
+  --   [ "start" .= start, "end" .= end ]
 
 instance ToJSON (t a) => ToJSON (AList t a) where
   toJSON (AList _ s xs) = toJSON xs
 
 instance ToJSON BaseType where
-  toJSON = genericToJSON jsonOptions{constructorTagModifier = camelTo2 '_' . drop 4}
+  toJSON t = case t of
+    TypeInteger -> toJSON @String "integer"
+    TypeReal -> toJSON @String "real"
+    TypeDoublePrecision -> toJSON @String "double_precision"
+    TypeComplex -> toJSON @String "complex"
+    TypeDoubleComplex -> toJSON @String "double_complex"
+    TypeLogical -> toJSON @String "logical"
+    TypeCharacter -> toJSON @String "character"
+    TypeByte -> toJSON @String "byte"
+    TypeRecord r -> toJSON @String r
 
 instance ToJSON a => ToJSON (TypeSpec a) where
   toJSON (TypeSpec _ s t mSel) = object
@@ -121,8 +132,9 @@ instance ToJSON a => ToJSON (Statement a) where
     StParameter _ s args -> tag "parameter"
       ["span" .= s, "declarators" .= args]
     StExternal _ s args -> tag "external"
-      ["span" .= s, "declarators" .= args]
-    StIntrinsic {} -> error "unexpected StIntrinsic"
+      ["span" .= s, "arguments" .= args]
+    StIntrinsic _ s args -> tag "intrinsic"
+      ["span" .= s, "arguments" .= args]
     StCommon _ s args -> tag "common"
       ["span" .= s, "groups" .= args]
     StEquivalence _ s args -> tag "equivalence"
