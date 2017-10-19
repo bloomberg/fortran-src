@@ -136,6 +136,7 @@ import Debug.Trace
   neqv                  { TOpNotEquivalent _ }
   or                    { TOpOr _ }
   and                   { TOpAnd _ }
+  xor                   { TOpXOr _ }
   not                   { TOpNot _ }
   '<'                   { TOpLT _ }
   '<='                  { TOpLE _ }
@@ -150,7 +151,7 @@ import Debug.Trace
   label                 { TLabel _ _ }
   newline               { TNewline _ }
 
-%left eqv neqv
+%left eqv neqv xor
 %left or
 %left and
 %right not
@@ -423,6 +424,7 @@ CI_EXPRESSION
 | ARITHMETIC_SIGN CI_EXPRESSION %prec NEGATION { ExpUnary () (getTransSpan (fst $1) $2) (snd $1) $2 }
 | CI_EXPRESSION or CI_EXPRESSION { ExpBinary () (getTransSpan $1 $3) Or $1 $3 }
 | CI_EXPRESSION and CI_EXPRESSION { ExpBinary () (getTransSpan $1 $3) And $1 $3 }
+| CI_EXPRESSION xor CI_EXPRESSION { ExpBinary () (getTransSpan $1 $3) XOr $1 $3 }
 | not CI_EXPRESSION { ExpUnary () (getTransSpan $1 $2) Not $2 }
 | CI_EXPRESSION eqv CI_EXPRESSION { ExpBinary () (getTransSpan $1 $3) Equivalent $1 $3 }
 | CI_EXPRESSION neqv CI_EXPRESSION { ExpBinary () (getTransSpan $1 $3) NotEquivalent $1 $3 }
@@ -812,6 +814,7 @@ EXPRESSION
 | EXPRESSION '/' '/' EXPRESSION %prec CONCAT { ExpBinary () (getTransSpan $1 $4) Concatenation $1 $4 }
 | ARITHMETIC_SIGN EXPRESSION %prec NEGATION { ExpUnary () (getTransSpan (fst $1) $2) (snd $1) $2 }
 | EXPRESSION or EXPRESSION { ExpBinary () (getTransSpan $1 $3) Or $1 $3 }
+| EXPRESSION xor EXPRESSION { ExpBinary () (getTransSpan $1 $3) XOr $1 $3 }
 | EXPRESSION and EXPRESSION { ExpBinary () (getTransSpan $1 $3) And $1 $3 }
 | not EXPRESSION { ExpUnary () (getTransSpan $1 $2) Not $2 }
 | EXPRESSION eqv EXPRESSION { ExpBinary () (getTransSpan $1 $3) Equivalent $1 $3 }
@@ -870,6 +873,7 @@ CONSTANT_EXPRESSION
 | CONSTANT_EXPRESSION '/' '/' CONSTANT_EXPRESSION %prec CONCAT { ExpBinary () (getTransSpan $1 $4) Concatenation $1 $4 }
 | ARITHMETIC_SIGN CONSTANT_EXPRESSION %prec NEGATION { ExpUnary () (getTransSpan (fst $1) $2) (snd $1) $2 }
 | CONSTANT_EXPRESSION or CONSTANT_EXPRESSION { ExpBinary () (getTransSpan $1 $3) Or $1 $3 }
+| CONSTANT_EXPRESSION xor CONSTANT_EXPRESSION { ExpBinary () (getTransSpan $1 $3) XOr $1 $3 }
 | CONSTANT_EXPRESSION and CONSTANT_EXPRESSION { ExpBinary () (getTransSpan $1 $3) And $1 $3 }
 | not CONSTANT_EXPRESSION { ExpUnary () (getTransSpan $1 $2) Not $2 }
 | CONSTANT_EXPRESSION RELATIONAL_OPERATOR CONSTANT_EXPRESSION %prec RELATIONAL { ExpBinary () (getTransSpan $1 $3) $2 $1 $3 }

@@ -216,6 +216,7 @@ tokens :-
   <st,iif> ".or."                             { addSpan TOpOr  }
   <st,iif> ".and."                            { addSpan TOpAnd  }
   <st,iif> ".not."                            { addSpan TOpNot  }
+  <st,iif> ".xor." / { bigIronP }             { addSpan TOpXOr  }
   <st,iif> ".eqv." / { fortran77P }           { addSpan TOpEquivalent  }
   <st,iif> ".neqv." / { fortran77P }          { addSpan TOpNotEquivalent  }
 
@@ -780,6 +781,7 @@ data Token = TLeftPar             SrcSpan
            | TAmpersand           SrcSpan
            | TOpOr                SrcSpan
            | TOpAnd               SrcSpan
+           | TOpXOr               SrcSpan
            | TOpNot               SrcSpan
            | TOpEquivalent        SrcSpan
            | TOpNotEquivalent     SrcSpan

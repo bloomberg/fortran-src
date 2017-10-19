@@ -461,6 +461,7 @@ data BinaryOp =
   | EQ
   | NE
   | Or
+  | XOr
   | And
   | Equivalent
   | NotEquivalent
