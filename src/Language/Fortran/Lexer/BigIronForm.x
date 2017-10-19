@@ -459,7 +459,7 @@ bigIronP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
 bigIronP fv _ _ _ = fv == FortranBigIron
 
 attributeP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
-attributeP _ _ _ ai =  followsComma && precedesDoubleColon ai && startsWithTypeSpec
+attributeP fv _ _ ai =  followsComma && precedesDoubleColon fv ai && startsWithTypeSpec
   where
     followsComma
       | Just TComma{} <- aiPreviousToken ai = True
@@ -472,7 +472,7 @@ attributeP _ _ _ ai =  followsComma && precedesDoubleColon ai && startsWithTypeS
 
 selectorP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
 selectorP fv _ _ ai = fv == FortranBigIron &&
-    followsType && nextTokenIsOpAssign && precedesDoubleColon ai
+    followsType && nextTokenIsOpAssign && precedesDoubleColon fv ai
   where
     nextTokenIsOpAssign = nextTokenConstr fv ai == (Just . fillConstr $ TOpAssign)
     followsType =
@@ -497,14 +497,26 @@ nextTokenConstr fv ai =
       , psFilename = "<unknown>"
       , psContext = [ ConStart ] }
 
-precedesDoubleColon :: AlexInput -> Bool
-precedesDoubleColon ai = not . flip seenConstr ai . fillConstr $ TDoubleColon
+precedesDoubleColon :: FortranVersion -> AlexInput -> Bool
+precedesDoubleColon fv ai =
+  case unParse (lexer $ f) ps of
+      ParseOk True _ -> True
+      _ -> False
+  where
+    ps = ParseState
+      { psAlexInput = ai { aiStartCode = st}
+      , psVersion = fv
+      , psFilename = "<unknown>"
+      , psParanthesesCount = ParanthesesCount 0 False
+      , psContext = [ ConStart ] }
+    f t =
+      case t of
+        TDoubleColon{} -> return True
+        TNewline{} -> return False
+        TEOF{} -> return False
+        _ -> lexer f
 
 fillConstr = toConstr . ($ undefined)
-
-seenConstr :: Constr -> AlexInput -> Bool
-seenConstr candidateConstr ai =
-  candidateConstr `elem` (toConstr <$> aiPreviousTokensInLine ai)
 
 --------------------------------------------------------------------------------
 -- Lexer helpers
