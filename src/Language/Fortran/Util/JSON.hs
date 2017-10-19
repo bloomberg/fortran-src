@@ -110,7 +110,8 @@ instance ToJSON a => ToJSON (Statement a) where
     StDimension _ s decls -> tag "dimension"
       ["span" .= s, "declarators" .= decls]
     StAllocatable {} -> error "unexpected StAllocatable"
-    StPointer {} -> error "unexpected StPointer"
+    StPointer _ s decls -> tag "pointer"
+      ["span" .= s, "declarators" .= decls]
     StTarget {} -> error "unexpected StTarget"
     StData _ s args -> tag "data"
       ["span" .= s, "data_groups" .= args]
