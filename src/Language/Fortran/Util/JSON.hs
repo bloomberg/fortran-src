@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 module Language.Fortran.Util.JSON where
 
 import Prelude hiding (Ordering(..))
@@ -76,17 +77,17 @@ instance ToJSON a => ToJSON (Block a) where
   toJSON bl = case bl of
     BlStatement _ s l st -> tag "statement"
       ["span" .= s, "label" .= l, "statement" .= st]
-    BlIf _ s l name conds blocks endlabel -> tag "if"
+    BlIf _ s l _ conds blocks endlabel -> tag "if"
       [ "span" .= s, "label" .= l, "conditions" .= conds
       , "blocks" .= blocks, "end_label" .= endlabel ]
     BlCase _ s l _ scrut ranges blocks endlabel -> tag "select"
       [ "span" .= s, "label" .= l, "scrutinee" .= scrut
       , "ranges" .= ranges, "blocks" .= blocks, "end_label" .= endlabel ]
-    BlDo _ s l name target dospec body endlabel  -> tag "do"
+    BlDo _ s l _ target dospec body endlabel  -> tag "do"
       [ "span" .= s, "label" .= l, "target" .= target
       , "do_spec" .= dospec, "body" .= body, "end_label" .= endlabel]
-    BlDoWhile _ s l name cond dospec body endlabel  -> tag "do_while"
-      [ "span" .= s, "label" .= l, "condition" .= cond
+    BlDoWhile _ s l _ target cond body endlabel  -> tag "do_while"
+      [ "span" .= s, "label" .= l, "target" .= target, "condition" .= cond
       , "body" .= body, "end_label" .= endlabel]
     BlInterface _ s l decls blocks  -> tag "interface"
       [ "span" .= s, "label" .= l
@@ -285,7 +286,7 @@ instance ToJSON a => ToJSON (Expression a) where
     ExpInitialisation _ s exps -> tag "initialisation"
       ["span" .= s, "expressions" .= exps]
     ExpReturnSpec _ s tgt -> tag "return_spec"
-      ["span" .= s, "target" .= exp]
+      ["span" .= s, "target" .= tgt]
     ExpByValue _ s exp -> tag "%val"
       ["span" .= s, "expression" .= exp]
 
