@@ -97,6 +97,10 @@ instance ToJSON a => ToJSON (Statement a) where
   toJSON st = case st of
     StDeclaration _ s t attrs decls -> tag "declaration"
       ["span" .= s, "type" .= t, "attributes" .= attrs, "declarators" .= decls]
+    StStructure _ s name decls -> tag "structure"
+      ["span" .= s, "name" .= name, "declarations" .= decls]
+    StUnion _ s maps -> tag "union"
+      ["span" .= s, "maps" .= maps]
     StIntent {} -> error "unexpected StIntent"
     StOptional {} -> error "unexpected StOptional"
     StPublic {} -> error "unexpected StPublic"
