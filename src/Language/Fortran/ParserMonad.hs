@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -14,6 +15,7 @@ import Control.Exception
 import Control.Monad.State
 import Control.Monad.Except
 
+import Data.Aeson (ToJSON)
 import Data.Typeable
 import Data.Data
 import GHC.Generics (Generic)
@@ -30,7 +32,7 @@ data FortranVersion = Fortran66
                     | Fortran90
                     | Fortran2003
                     | Fortran2008
-                    deriving (Ord, Eq, Data, Typeable, Generic)
+                    deriving (Ord, Eq, Data, Typeable, Generic, ToJSON)
 
 instance Show FortranVersion where
   show Fortran66 = "Fortran 66"

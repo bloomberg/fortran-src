@@ -4,6 +4,7 @@ module Main where
 
 import Prelude hiding (readFile)
 import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.Lazy.Char8 as LB
 import Data.Text.Encoding (encodeUtf8, decodeUtf8With)
 import Data.Text.Encoding.Error (replace)
 
@@ -45,6 +46,9 @@ import qualified Data.IntMap as IM
 import qualified Data.Map as M
 import Control.Monad
 import Text.Printf
+
+import qualified Data.Aeson as A
+import Language.Fortran.Util.JSON
 
 programName = "fortran-src"
 
@@ -105,6 +109,7 @@ main = do
         BBlocks    -> putStrLn . runBBlocks =<< parserF mods contents path
         SuperGraph -> putStrLn . runSuperGraph =<< parserF mods contents path
         Reprint    -> putStrLn . render . flip (pprint version) (Just 0) =<< parserF mods contents path
+        DumpJSON   -> LB.putStrLn . A.encode =<< parserF mods contents path
 
     _ -> fail $ usageInfo programName options
 
@@ -193,7 +198,7 @@ showTypes tenv = flip concatMap (M.toList tenv) $ \ (name, IDType { idVType = vt
 printTypes :: TypeEnv -> IO ()
 printTypes = putStrLn . showTypes
 
-data Action = Lex | Parse | Typecheck | Rename | BBlocks | SuperGraph | Reprint | DumpModFile deriving Eq
+data Action = Lex | Parse | Typecheck | Rename | BBlocks | SuperGraph | Reprint | DumpModFile | DumpJSON deriving Eq
 
 instance Read Action where
   readsPrec _ value =
@@ -244,6 +249,10 @@ options =
       ["reprint"]
       (NoArg $ \ opts -> opts { action = Reprint })
       "Parse and output using pretty printer"
+  , Option ['j']
+      ["json"]
+      (NoArg $ \ opts -> opts { action = DumpJSON })
+      "Parse and output using json"
   , Option []
       ["dot"]
       (NoArg $ \ opts -> opts { outputFormat = DOT })
