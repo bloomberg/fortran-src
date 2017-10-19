@@ -472,13 +472,16 @@ attributeP fv _ _ ai =  followsComma && precedesDoubleColon fv ai && startsWithT
 
 selectorP :: FortranVersion -> AlexInput -> Int -> AlexInput -> Bool
 selectorP fv _ _ ai = fv == FortranBigIron &&
-    followsType && nextTokenIsOpAssign && precedesDoubleColon fv ai
+    followsType && nextTokenIsOpAssign && followsLPar
   where
     nextTokenIsOpAssign = nextTokenConstr fv ai == (Just . fillConstr $ TOpAssign)
     followsType =
       case searchBeforePar (aiPreviousTokensInLine ai) of
         Just x -> isTypeSpec x
         Nothing -> False
+    followsLPar
+      | Just TLeftPar{} <- aiPreviousToken ai = True
+      | otherwise = False
     searchBeforePar [] = Nothing
     searchBeforePar (x:xs)
       | TLeftPar{} <- x = if null xs then Nothing else (Just $ head xs)
