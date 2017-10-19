@@ -426,8 +426,6 @@ data Declarator a =
               (AList DimensionDeclarator a) -- Dimensions
               (Maybe (Expression a)) -- Length (character)
               (Maybe (Expression a)) -- Initial value
-  | DeclUnion a SrcSpan
-              (AList (AList Statement) a) -- union alternatives
   deriving (Eq, Show, Data, Typeable, Generic, Functor)
 
 setInitialisation :: Declarator a -> Expression a -> Declarator a
