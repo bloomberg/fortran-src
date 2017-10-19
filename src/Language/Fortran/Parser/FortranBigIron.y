@@ -1037,16 +1037,17 @@ KIND_SELECTOR
 
 CHAR_SELECTOR :: { Maybe (Selector A0) }
 CHAR_SELECTOR
-: '(' ARITHMETIC_CONSTANT_EXPRESSION ')'
+: '(' LEN_EXPRESSION ')'
   { Just $ Selector () (getTransSpan $1 $3) (Just $2) Nothing }
-| BASIC_CHAR_SELECTOR { $1 }
-
-BASIC_CHAR_SELECTOR :: { Maybe (Selector A0) }
-BASIC_CHAR_SELECTOR
-: '*' ARITHMETIC_CONSTANT_EXPRESSION
+| '*' ARITHMETIC_CONSTANT_EXPRESSION
   { Just $ Selector () (getTransSpan $1 $2) (Just $2) Nothing }
 | '*' '(' STAR ')' { Just $ Selector () (getTransSpan $1 $4) (Just $3) Nothing }
 | {- EMPTY -} { Nothing }
+
+LEN_EXPRESSION :: { Expression A0 }
+LEN_EXPRESSION
+: ARITHMETIC_CONSTANT_EXPRESSION  { $1 }
+| STAR                            { $1 }
 
 IMP_TYPE_SPEC :: { TypeSpec A0 }
 IMP_TYPE_SPEC
