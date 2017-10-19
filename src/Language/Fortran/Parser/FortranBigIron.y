@@ -193,8 +193,9 @@ MAYBE_LABEL_IN_6COLUMN
 
 PROGRAM_UNIT :: { ProgramUnit A0 }
 PROGRAM_UNIT
-: program NAME NEWLINE BLOCKS end { PUMain () (getTransSpan $1 $5) (Just $2) (reverse $4) Nothing }
-| TYPE_SPEC function NAME MAYBE_ARGUMENTS NEWLINE BLOCKS ENDPROG
+: program NAME NEWLINE BLOCKS ENDPROG
+  { PUMain () (getTransSpan $1 $5) (Just $2) (reverse $4) Nothing }
+| TYPE_SPEC function NAME MAYBE_ARGUMENTS NEWLINE BLOCKS ENDFUN
   { PUFunction () (getTransSpan $1 $7) (Just $1) False $3 $4 Nothing (reverse $6) Nothing }
 | function NAME MAYBE_ARGUMENTS NEWLINE BLOCKS ENDFUN
   { PUFunction () (getTransSpan $1 $6) Nothing False $2 $3 Nothing (reverse $5) Nothing }
@@ -212,24 +213,28 @@ END
 ENDPROG :: { Token }
 ENDPROG
 : END                         { $1 }
-| endprogram                  { $1 }
-| LABEL_IN_6COLUMN endprogram { $2 }
+| endprogram MAYBE_ID       { $1 }
+| LABEL_IN_6COLUMN endprogram MAYBE_ID { $2 }
 
 ENDFUN :: { Token }
 ENDFUN
 : END                          { $1 }
-| endfunction                  { $1 }
-| LABEL_IN_6COLUMN endfunction { $2 }
+| endfunction MAYBE_ID       { $1 }
+| LABEL_IN_6COLUMN endfunction MAYBE_ID { $2 }
 
 ENDSUB :: { Token }
 ENDSUB
 : END                            { $1 }
-| endsubroutine                  { $1 }
-| LABEL_IN_6COLUMN endsubroutine { $2 }
+| endsubroutine MAYBE_ID       { $1 }
+| LABEL_IN_6COLUMN endsubroutine MAYBE_ID { $2 }
 
 MAYBE_ARGUMENTS :: { Maybe (AList Expression A0) }
 : '(' MAYBE_VARIABLES ')' { $2 }
 | {- Nothing -} { Nothing }
+
+MAYBE_ID :: { Maybe Name }
+: id { let (TId _ name) = $1 in Just name }
+| {- empty -} { Nothing }
 
 NAME :: { Name } : id { let (TId _ name) = $1 in name }
 
@@ -904,6 +909,11 @@ CONSTANT_EXPRESSION
 -- | VARIABLE                     { $1 }
 | SUBSCRIPT                    { $1 }
 | HOLLERITH                    { $1 }
+| '(/' EXPRESSION_LIST '/)' {
+    let { exps = reverse $2;
+          expList = AList () (getSpan exps) exps }
+    in ExpInitialisation () (getTransSpan $1 $3) expList
+          }
 
 ARITHMETIC_CONSTANT_EXPRESSION :: { Expression A0 }
 ARITHMETIC_CONSTANT_EXPRESSION
