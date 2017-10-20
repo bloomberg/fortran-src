@@ -170,7 +170,8 @@ instance ToJSON a => ToJSON (Statement a) where
     StCase _ s _ idxs -> tag "case"
       ["span" .= s, "indices" .= idxs]
     StEndcase _ s _ -> tag "end_select" ["span" .= s]
-    StFunction{} -> error "unexpected StFunction"
+    StFunction _ s fn args body -> tag "statement_function"
+      ["span" .= s, "name" .= fn, "arguments" .= args, "body" .= body]
     StExpressionAssign _ s tgt exp -> tag "assign_expression"
       ["span" .= s, "target" .= tgt, "expression" .= exp]
     StPointerAssign{} -> error "unexpected StPointerAssign"

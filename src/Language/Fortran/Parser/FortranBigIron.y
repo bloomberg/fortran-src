@@ -1138,7 +1138,7 @@ transformations =
   , GroupIf
   , GroupCase
   , DisambiguateIntrinsic
-  -- , DisambiguateFunction
+  , DisambiguateFunction
   ]
 bigIronParser ::
     B.ByteString -> String -> ParseResult AlexInput Token (ProgramFile A0)
@@ -1154,11 +1154,16 @@ bigIronParserWithModFiles mods sourceCode filename =
 
 bigIronParserWithIncludes ::
   [String] -> B.ByteString -> String -> IO (ParseResult AlexInput Token (ProgramFile A0))
-bigIronParserWithIncludes incs bs fp = case bigIronParserWithModFiles emptyModFiles bs fp of
-  ParseFailed e -> return (ParseFailed e)
-  ParseOk p x -> do
-    p' <- descendBiM (inlineInclude incs) p
-    return (ParseOk p' x)
+bigIronParserWithIncludes incs sourceCode filename =
+    fmap (pfSetFilename filename . transform) <$> doParse
+  where
+    doParse = case parse parseState of
+      ParseFailed e -> return (ParseFailed e)
+      ParseOk p x -> do
+        p' <- descendBiM (inlineInclude incs) p
+        return (ParseOk p' x)
+    transform = transformWithModFiles emptyModFiles transformations
+    parseState = initParseState sourceCode FortranBigIron filename
 
 bigIronIncludeParser ::
     B.ByteString -> String -> ParseResult AlexInput Token [Block A0]
