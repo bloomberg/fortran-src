@@ -109,9 +109,7 @@ instance ToJSON a => ToJSON (Statement a) where
     StDeclaration _ s t attrs decls -> tag "declaration"
       ["span" .= s, "type" .= t, "attributes" .= attrs, "declarators" .= decls]
     StStructure _ s name decls -> tag "structure"
-      ["span" .= s, "name" .= name, "declarations" .= decls]
-    StUnion _ s maps -> tag "union"
-      ["span" .= s, "maps" .= maps]
+      ["span" .= s, "name" .= name, "fields" .= decls]
     StIntent {} -> error "unexpected StIntent"
     StOptional {} -> error "unexpected StOptional"
     StPublic {} -> error "unexpected StPublic"
@@ -277,9 +275,16 @@ instance ToJSON a => ToJSON (DataGroup a) where
   toJSON (DataGroup _ s names exps) = tag "data_group"
     ["span" .= s, "names" .= names, "initializers" .= exps]
 
+instance ToJSON a => ToJSON (StructureItem a) where
+  toJSON si = case si of
+    StructFields _ s t attrs decls -> tag "fields"
+      ["span" .= s, "type" .= t, "attributes" .= attrs, "declarators" .= decls]
+    StructUnion _ s maps -> tag "union"
+      ["span" .= s, "maps" .= maps]
+
 instance ToJSON a => ToJSON (UnionMap a) where
-  toJSON (UnionMap _ s stmts) = tag "union_map"
-    ["span" .= s, "declarations" .= stmts]
+  toJSON (UnionMap _ s flds) = tag "union_map"
+    ["span" .= s, "fields" .= flds]
 
 instance ToJSON a => ToJSON (DoSpecification a) where
   toJSON (DoSpecification _ s init lim incr) = tag "do_spec"

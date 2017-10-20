@@ -200,8 +200,7 @@ data Block a =
 
 data Statement a  =
     StDeclaration         a SrcSpan (TypeSpec a) (Maybe (AList Attribute a)) (AList Declarator a)
-  | StStructure           a SrcSpan (Maybe String) (AList Statement a)
-  | StUnion               a SrcSpan (AList UnionMap a)
+  | StStructure           a SrcSpan (Maybe String) (AList StructureItem a)
   | StIntent              a SrcSpan Intent (AList Expression a)
   | StOptional            a SrcSpan (AList Expression a)
   | StPublic              a SrcSpan (Maybe (AList Expression a))
@@ -340,8 +339,13 @@ data DataGroup a =
   DataGroup a SrcSpan (AList Expression a) (AList Expression a)
   deriving (Eq, Show, Data, Typeable, Generic, Functor)
 
+data StructureItem a =
+    StructFields a SrcSpan (TypeSpec a) (Maybe (AList Attribute a)) (AList Declarator a)
+  | StructUnion a SrcSpan (AList UnionMap a)
+  deriving (Eq, Show, Data, Typeable, Generic, Functor)
+
 data UnionMap a =
-  UnionMap a SrcSpan (AList Statement a)
+  UnionMap a SrcSpan (AList StructureItem a)
   deriving (Eq, Show, Data, Typeable, Generic, Functor)
 
 data FormatItem a =
@@ -492,6 +496,7 @@ instance FirstParameter (ImpList a) a
 instance FirstParameter (ImpElement a) a
 instance FirstParameter (CommonGroup a) a
 instance FirstParameter (DataGroup a) a
+instance FirstParameter (StructureItem a) a
 instance FirstParameter (UnionMap a) a
 instance FirstParameter (Namelist a) a
 instance FirstParameter (FormatItem a) a
@@ -515,6 +520,7 @@ instance SecondParameter (ImpList a) SrcSpan
 instance SecondParameter (ImpElement a) SrcSpan
 instance SecondParameter (CommonGroup a) SrcSpan
 instance SecondParameter (DataGroup a) SrcSpan
+instance SecondParameter (StructureItem a) SrcSpan
 instance SecondParameter (UnionMap a) SrcSpan
 instance SecondParameter (Namelist a) SrcSpan
 instance SecondParameter (FormatItem a) SrcSpan
@@ -538,6 +544,7 @@ instance Annotated ImpList
 instance Annotated ImpElement
 instance Annotated CommonGroup
 instance Annotated DataGroup
+instance Annotated StructureItem
 instance Annotated UnionMap
 instance Annotated Namelist
 instance Annotated FormatItem
@@ -561,6 +568,7 @@ instance Spanned (ImpElement a)
 instance Spanned (Block a)
 instance Spanned (CommonGroup a)
 instance Spanned (DataGroup a)
+instance Spanned (StructureItem a)
 instance Spanned (UnionMap a)
 instance Spanned (Namelist a)
 instance Spanned (FormatItem a)
@@ -733,6 +741,7 @@ instance Out a => Out (Comment a)
 instance Out a => Out (Block a)
 instance Out a => Out (CommonGroup a)
 instance Out a => Out (DataGroup a)
+instance Out a => Out (StructureItem a)
 instance Out a => Out (UnionMap a)
 instance Out a => Out (Namelist a)
 instance Out a => Out (FormatItem a)

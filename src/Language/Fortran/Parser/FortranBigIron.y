@@ -516,7 +516,7 @@ NONEXECUTABLE_STATEMENT
 | entry VARIABLE { StEntry () (getTransSpan $1 $2) $2 Nothing Nothing }
 | entry VARIABLE ENTRY_ARGS { StEntry () (getTransSpan $1 $3) $2 (Just $3) Nothing }
 | include STRING { StInclude () (getTransSpan $1 $2) $2 Nothing }
-| structure MAYBE_NAME NEWLINE DECLARATIONS endstructure
+| structure MAYBE_NAME NEWLINE STRUCTURE_DECLARATIONS endstructure
   { StStructure () (getTransSpan $1 $5) $2 (fromReverseList $4) }
 
 MAYBE_NAME :: { Maybe Name }
@@ -524,17 +524,19 @@ MAYBE_NAME
 : '/' NAME '/' { Just $2 }
 | {- empty -}  { Nothing }
 
-DECLARATIONS :: { [Statement A0] }
-DECLARATIONS
-: DECLARATIONS STRUCTURE_DECLARATION_STATEMENT
+STRUCTURE_DECLARATIONS :: { [StructureItem A0] }
+STRUCTURE_DECLARATIONS
+: STRUCTURE_DECLARATIONS STRUCTURE_DECLARATION_STATEMENT
   { $2 : $1 }
 | STRUCTURE_DECLARATION_STATEMENT { [ $1 ] }
 
-STRUCTURE_DECLARATION_STATEMENT :: { Statement A0 }
+STRUCTURE_DECLARATION_STATEMENT :: { StructureItem A0 }
 STRUCTURE_DECLARATION_STATEMENT
-: DECLARATION_STATEMENT NEWLINE { $1 }
+: DECLARATION_STATEMENT NEWLINE
+  { let StDeclaration () s t attrs decls = $1
+    in StructFields () s t attrs decls }
 | union NEWLINE UNION_MAPS endunion NEWLINE
-  { StUnion () (getTransSpan $1 $5) (fromReverseList $3) }
+  { StructUnion () (getTransSpan $1 $5) (fromReverseList $3) }
 
 UNION_MAPS :: { [ UnionMap A0 ] }
 UNION_MAPS
@@ -543,18 +545,8 @@ UNION_MAPS
 
 UNION_MAP :: { UnionMap A0 }
 UNION_MAP
-: map NEWLINE DECLARATION_STATEMENTS endmap NEWLINE
+: map NEWLINE STRUCTURE_DECLARATIONS endmap NEWLINE
   { UnionMap () (getTransSpan $1 $5) (fromReverseList $3) }
-
-DECLARATION_STATEMENTS :: { [Statement A0] }
-DECLARATION_STATEMENTS
-: DECLARATION_STATEMENTS SIMPLE_DECLARATION_STATEMENT
-  { $2 : $1 }
-| SIMPLE_DECLARATION_STATEMENT { [ $1 ] }
-
-SIMPLE_DECLARATION_STATEMENT :: { Statement A0 }
-SIMPLE_DECLARATION_STATEMENT
-: DECLARATION_STATEMENT NEWLINE { $1 }
 
 ENTRY_ARGS :: { AList Expression A0 }
 ENTRY_ARGS
