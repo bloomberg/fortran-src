@@ -134,7 +134,7 @@ instance ToJSON a => ToJSON (Statement a) where
     StIntrinsic _ s args -> tag "intrinsic"
       ["span" .= s, "arguments" .= args]
     StCommon _ s args -> tag "common"
-      ["span" .= s, "groups" .= args]
+      ["span" .= s, "common_groups" .= args]
     StEquivalence _ s args -> tag "equivalence"
       ["span" .= s, "groups" .= args]
     StFormat{} -> error "unexpected StFormat"
@@ -168,7 +168,7 @@ instance ToJSON a => ToJSON (Statement a) where
     StCase _ s _ idxs -> tag "case"
       ["span" .= s, "indices" .= idxs]
     StEndcase _ s _ -> tag "end_select" ["span" .= s]
-    StFunction _ s fn args body -> tag "statement_function"
+    StFunction _ s fn args body -> tag "function"
       ["span" .= s, "name" .= fn, "arguments" .= args, "body" .= body]
     StExpressionAssign _ s tgt exp -> tag "assign_expression"
       ["span" .= s, "target" .= tgt, "expression" .= exp]
