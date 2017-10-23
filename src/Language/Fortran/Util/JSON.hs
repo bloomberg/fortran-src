@@ -348,28 +348,28 @@ instance ToJSON a => ToJSON (DimensionDeclarator a) where
 
 instance ToJSON UnaryOp where
   toJSON u = case u of
-    Plus -> tag "plus" []
-    Minus -> tag "minus" []
-    Not -> tag "not" []
+    Plus -> toJSON @String "plus"
+    Minus -> toJSON @String "minus"
+    Not -> toJSON @String "not"
     UnCustom{} -> error "unexpected UnCustom"
 
 instance ToJSON BinaryOp where
   toJSON b = case b of
-    Addition -> tag "+" []
-    Subtraction -> tag "-" []
-    Multiplication -> tag "*" []
-    Division -> tag "/" []
-    Exponentiation -> tag "**" []
-    Concatenation -> tag "//" []
-    GT -> tag ">" []
-    GTE -> tag ">=" []
-    LT -> tag "<" []
-    LTE -> tag "<=" []
-    EQ -> tag "==" []
-    NE -> tag "!=" []
-    Or -> tag "or" []
-    XOr -> tag "xor" []
-    And -> tag "and" []
-    Equivalent -> tag "eqv" []
-    NotEquivalent -> tag "neqv" []
+    Addition -> toJSON @String "+"
+    Subtraction -> toJSON @String "-"
+    Multiplication -> toJSON @String "*"
+    Division -> toJSON @String "/"
+    Exponentiation -> toJSON @String "**"
+    Concatenation -> toJSON @String "//"
+    GT -> toJSON @String ">"
+    GTE -> toJSON @String ">="
+    LT -> toJSON @String "<"
+    LTE -> toJSON @String "<="
+    EQ -> toJSON @String "=="
+    NE -> toJSON @String "!="
+    Or -> toJSON @String "or"
+    XOr -> toJSON @String "xor"
+    And -> toJSON @String "and"
+    Equivalent -> toJSON @String "eqv"
+    NotEquivalent -> toJSON @String "neqv"
     BinCustom{} -> error "unexpected BinCustom"

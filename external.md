@@ -129,4 +129,66 @@ expression
    |  { "tag": "unary_op", "unary_op": unary_op, "expression": expression }
    |  { "tag": "subscript", "expression": expression, "indices": [index] }
    |  { "tag": "deref", "expression": expression, "field": expression }
+   |  { "tag": "function_call", "function": expression, "arguments": [argument]? }
+   |  { "tag": "implied_do", "do_spec": do_specification, "expressions": [expression] }
+   |  { "tag": "initialisation", "expressions": [expression] }
+   |  { "tag": "return_spec", "target": expression }
+   |  { "tag": "%val", "expression": expression }
+```
+
+```
+index
+  ::= { "tag": "index_single", "index": expression }
+   |  { "tag": "index_range", "lower": expression?, "upper": expression?, "stride": expression? }
+```
+
+```
+# no span
+value
+  ::= { "tag": "integer", "value": string }
+   |  { "tag": "real", "value": string }
+   |  { "tag": "complex", "real": string, "imaginary": string }
+   |  { "tag": "hollerith", "value": string }
+   |  { "tag": "logical", "value": string }
+   |  { "tag": "intrinsic", "value": string }
+   |  { "tag": "variable", "value": string }
+   |  { "tag": "star" }
+```
+
+```
+declarator
+  ::= { "tag": "decl_variable", "variable": expresison, "length": expression?, "initial": expression? }
+   |  { "tag": "decl_array", "array": expression, "dimensions": [dimension_declarator], "length": expression?, "initial": expression? }
+```
+
+```
+dimension_declarator
+  ::= { "lower": expression?, "upper": expression? }
+```
+
+```
+# no span
+unary_op
+  ::= ("plus" | "minus" | "not")
+```
+
+```
+# no span
+binary_op
+  ::= ("+" | "-" | "*" | "/" | "**" | "//" | ">" | ">=" | "<" | "<=" | "==" | "!=" | "or" | "xor" | "and" | "eqv" | "neqv")
+```
+
+```
+type_spec
+  ::= { "base_type": base_type, "selector": selector }
+```
+
+```
+base_type
+  ::= ("integer" | "real" | "double_precision" | "complex" | "double_complex" | "logical" | "character" | "byte" | string)
+```
+
+```
+selector
+  ::= { "length": expression?, "kind": expression? }
 ```
