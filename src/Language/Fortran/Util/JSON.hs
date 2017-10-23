@@ -244,7 +244,7 @@ instance ToJSON a => ToJSON (Attribute a) where
     AttrPublic{} -> error "unexpected AttrPublic"
     AttrPrivate{} -> error "unexpected AttrPrivate"
     AttrAllocatable{} -> error "unexpected AttrAllocatable"
-    AttrDimension _ s dims -> tag "parameter" ["span" .= s, "dimensions" .= dims]
+    AttrDimension _ s dims -> tag "dimension" ["span" .= s, "dimensions" .= dims]
     AttrExternal _ s -> tag "external" ["span" .= s]
     AttrIntent{} -> error "unexpected AttrIntent"
     AttrOptional{} -> error "unexpected AttrOptional"
@@ -254,11 +254,11 @@ instance ToJSON a => ToJSON (Attribute a) where
 
 instance ToJSON a => ToJSON (ControlPair a) where
   toJSON (ControlPair _ s name exp) = tag "control_pair"
-    ["span" .= s, "id" .= name, "expression" .= exp]
+    ["span" .= s, "name" .= name, "expression" .= exp]
 
 instance ToJSON a => ToJSON (ImpList a) where
   toJSON (ImpList _ s t itms) = tag "implicit_spec"
-    ["span" .= s, "type" .= t, "names" .= itms]
+    ["span" .= s, "type" .= t, "items" .= itms]
 
 instance ToJSON a => ToJSON (ImpElement a) where
   toJSON imp = case imp of
@@ -269,7 +269,7 @@ instance ToJSON a => ToJSON (ImpElement a) where
 
 instance ToJSON a => ToJSON (CommonGroup a) where
   toJSON (CommonGroup _ s name exps) = tag "common_group"
-    ["span" .= s, "common_name" .= name, "expressions" .= exps]
+    ["span" .= s, "name" .= name, "expressions" .= exps]
 
 instance ToJSON a => ToJSON (DataGroup a) where
   toJSON (DataGroup _ s names exps) = tag "data_group"

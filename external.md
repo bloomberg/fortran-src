@@ -5,12 +5,12 @@
 span ::= "(<start-line>:<start-col>)-(<end-line>:<end-col>)"
 ```
 
-
 ```
 program_unit
   ::= { "tag": "main", "name": string, "blocks": [block] }
    |  { "tag": "subroutine", "name": string, "recursive": bool, "arguments": [expression]?, "blocks": [block] }
    |  { "tag": "function", "name": string, "recursive": bool, "arguments": [expression]?, "type": type_spec, "blocks": [block], "result": expression? }
+   |  { "tag": "block_data", "name": string?, "blocks": [block] }
 ```
 
 ```
@@ -39,8 +39,6 @@ statement
    |  { "tag": "implicit", "implicit_items": [implicit_items]? }
    |  { "tag": "entry", "name": expression, "arguments": [expression]? }
    |  { "tag": "include", "path": expression, "blocks": [block]? }
-   <!-- |  { tag: "do" } -->
-   <!-- |  { tag: "do_while" } -->
    |  { "tag": "end_do" }
    |  { "tag": "cycle" }
    |  { "tag": "exit" }
@@ -67,4 +65,68 @@ statement
    |  { "tag": "rewind", "specification": ([control_pair] | expression) }
    |  { "tag": "backspace", "specification": ([control_pair] | expression) }
    |  { "tag": "endfile", "specification": ([control_pair] | expression) }
+```
+
+```
+argument ::= { "name": string?, "expression": expression }
+```
+
+```
+attribute
+  ::= { "tag": "parameter" }
+   |  { "tag": "dimension", "dimensions": [dimension_declarator] }
+   |  { "tag": "external" }
+   |  { "tag": "pointer" }
+   |  { "tag": "save" }
+```
+
+```
+control_pair
+  ::= { "name": string?, "expression": expression }
+```
+
+```
+implicit_items
+  ::= { "type": type_spec, "items": [implicit_item] }
+```
+
+```
+implicit_item
+  ::= { "tag": "implicit_char", "char": string }
+   |  { "tag": "implicit_range", "lower": string, "upper": string }
+```
+
+```
+common_group
+  ::= { "name": expression?, "expressions": [expression] }
+```
+
+```
+data_group
+  ::= { "names": [expression], "initializers": [expression]}
+```
+
+```
+structure_item
+  ::= { "tag": "fields", "type": type_spec, "attributes": [attribute]?, "declarators": [declarator] }
+   |  { "tag": "union", "maps": [union_map] }
+```
+
+```
+union_map
+  ::= { "fields": [structure_item] }
+```
+
+```
+do_specification
+  ::= { "initial": statement, "limit": expression, "increment": expression? }
+```
+
+```
+expression
+  ::= { "tag": "value", "value": value }
+   |  { "tag": "binary_op", "binary_op": binary_op, "left": expression, "right": expression }
+   |  { "tag": "unary_op", "unary_op": unary_op, "expression": expression }
+   |  { "tag": "subscript", "expression": expression, "indices": [index] }
+   |  { "tag": "deref", "expression": expression, "field": expression }
 ```
