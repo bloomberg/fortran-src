@@ -5,6 +5,8 @@
 span ::= "(<start-line>:<start-col>)-(<end-line>:<end-col>)"
 ```
 
+- NOTE: all subsequent types will have a `"span"` field containing a `span` unless otherwise noted
+
 ```
 program_unit
   ::= { "tag": "main", "name": string, "blocks": [block] }
@@ -21,6 +23,8 @@ block
    |  { "tag": "do", "label": label?, "target": label?, "do_spec": do_specification, "body": [block], "end_label": label? }
    |  { "tag": "do_while", "label": label?, "target": label?, "condition": expression, "body": [block], "end_label": label? }
 ```
+
+- NOTE: in `if` and `select`, each condition (resp. range) maps to an element of the `blocks` list
 
 ```
 statement
@@ -39,7 +43,6 @@ statement
    |  { "tag": "implicit", "implicit_items": [implicit_items]? }
    |  { "tag": "entry", "name": expression, "arguments": [expression]? }
    |  { "tag": "include", "path": expression, "blocks": [block]? }
-   |  { "tag": "end_do" }
    |  { "tag": "cycle" }
    |  { "tag": "exit" }
    |  { "tag": "if_logical", "condition": expression, "statement": statement }
@@ -53,6 +56,7 @@ statement
    |  { "tag": "call", "function": expression, "arguments": [argument]? }
    |  { "tag": "return", "target": expression? }
    |  { "tag": "continue" }
+   |  { "tag": "end_do" }
    |  { "tag": "stop", "message": expression? }
    |  { "tag": "pause", "message": expression? }
    |  { "tag": "read", "format": ([control_pair] | expression), "arguments": [expression]? }
@@ -66,6 +70,33 @@ statement
    |  { "tag": "backspace", "specification": ([control_pair] | expression) }
    |  { "tag": "endfile", "specification": ([control_pair] | expression) }
 ```
+
+- NOTE: the `end_do` statement should be treated like the `continue`
+  statement, ie a no-op. The reason it exists is that the do-block
+  grouping transformation does not remove `end_do` statements that have
+  a label, so
+
+  ```
+      do 10 i = 1,10
+        x = x + 1
+  10  end do
+  ```
+  
+  would be parsed into the following two blocks
+  
+  ```
+  [ 
+    { "tag": "do", ... },
+    { "tag": "statement, "statement": {"tag": "end_do"}}
+  ]
+  ```
+  
+  rather than a single `do` block. We could tweak the transformation to
+  swallow the `end_do` statement as it would if the `end do` weren't
+  labeled, but according to
+  [Sun](https://docs.oracle.com/cd/E19957-01/805-4939/6j4m0vn8c/index.html),
+  this example is invalid anyway, so perhaps we just want to rewrite the
+  `end do` to a `continue` instead.
 
 ```
 argument ::= { "name": string?, "expression": expression }
