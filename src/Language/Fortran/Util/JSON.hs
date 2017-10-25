@@ -281,6 +281,8 @@ instance ToJSON a => ToJSON (StructureItem a) where
       ["span" .= s, "type" .= t, "attributes" .= attrs, "declarators" .= decls]
     StructUnion _ s maps -> tag "union"
       ["span" .= s, "maps" .= maps]
+    StructStructure _ s name decls -> tag "structure"
+      ["span" .= s, "name" .= name, "fields" .= decls]
 
 instance ToJSON a => ToJSON (UnionMap a) where
   toJSON (UnionMap _ s flds) = tag "union_map"

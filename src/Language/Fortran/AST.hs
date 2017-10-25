@@ -341,6 +341,7 @@ data DataGroup a =
 data StructureItem a =
     StructFields a SrcSpan (TypeSpec a) (Maybe (AList Attribute a)) (AList Declarator a)
   | StructUnion a SrcSpan (AList UnionMap a)
+  | StructStructure a SrcSpan (Maybe String) (AList StructureItem a)
   deriving (Eq, Show, Data, Typeable, Generic, Functor)
 
 data UnionMap a =
