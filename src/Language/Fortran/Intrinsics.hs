@@ -27,6 +27,7 @@ type IntrinsicsTable = M.Map String IntrinsicsEntry
 fortranVersionIntrinsics =
   [ (Fortran66, fortran77intrinsics) -- FIXME: find list of original '66 intrinsics
   , (Fortran77, fortran77intrinsics)
+  , (FortranBigIron, fortranBIintrinsics)
   , (Fortran90, fortran90intrinisics) ]
 
 -- | Obtain set of intrinsics that are most closely aligned with given version.
@@ -143,6 +144,12 @@ fortran77intrinsics = M.fromList
   , ("lgt"     , mkIEntry ITLogical func2)
   , ("lle"     , mkIEntry ITLogical func2)
   , ("llt"     , mkIEntry ITLogical func2)
+  ]
+
+fortranBIintrinsics :: IntrinsicsTable
+fortranBIintrinsics = fortran77intrinsics `M.union` M.fromList
+  [ ("%val" , mkIEntry (ITParam 1) func1)
+  , ("%ref" , mkIEntry (ITParam 1) func1)
   ]
 
 fortran90intrinisics :: IntrinsicsTable

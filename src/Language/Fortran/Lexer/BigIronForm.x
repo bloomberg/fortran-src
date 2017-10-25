@@ -40,9 +40,9 @@ $bit = 0-1
 @octal = o\'$octalDigit+\' | \'$octalDigit+\'o
 @hex = x\'$hexDigit+\' | \'$hexDigit+\'x | z\'$hexDigit+\' | \'$hexDigit+\'z
 
-$letter = [a-z _]
+$letter = [a-z]
 $alphanumeric = [$letter $digit]
-$alphanumericExtended = [$letter $digit \_ \$]
+$alphanumericExtended = [$letter $digit \_]
 $special = [\ \=\+\-\*\/\(\)\,\.\$]
 
 -- This should really be 6 characters but there are many standard non-compliant
@@ -51,7 +51,7 @@ $special = [\ \=\+\-\*\/\(\)\,\.\$]
 @id = $letter $alphanumeric{0,5}
 @label = [0-9] $digit{0,4}
 
-@idBI = $letter $alphanumericExtended*
+@idBI = [$letter \_ \%] [$alphanumericExtended \$]*
 
 @datatype = "integer" | "real" | "doubleprecision" | "complex" | "logical"
           -- BigIron extensions
@@ -243,8 +243,6 @@ tokens :-
   <st,iif> ".ne."                             { addSpan TOpNE  }
   <st,iif> ".gt."                             { addSpan TOpGT  }
   <st,iif> ".ge."                             { addSpan TOpGE  }
-
-  <st,iif> "%val" / { bigIronP }              { addSpan TByVal  }
 
   -- ID
   <st,iif> @id                                { addSpanAndMatch TId }
@@ -846,7 +844,6 @@ data Token = TLeftPar             SrcSpan
            | TBozIntBI            SrcSpan String
            | TExponent            SrcSpan String
            | TBool                SrcSpan String
-           | TByVal               SrcSpan
            | TOpPlus              SrcSpan
            | TOpMinus             SrcSpan
            | TOpExp               SrcSpan

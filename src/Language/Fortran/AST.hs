@@ -382,8 +382,6 @@ data Expression a =
   -- ^ Array initialisation
   | ExpReturnSpec    a SrcSpan (Expression a)
   -- ^ Function return value specification
-  | ExpByValue       a SrcSpan (Expression a)
-  -- ^ Directive to pass by value
   deriving (Eq, Show, Data, Typeable, Generic, Functor)
 
 data Index a =

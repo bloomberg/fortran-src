@@ -310,8 +310,6 @@ instance ToJSON a => ToJSON (Expression a) where
       ["span" .= s, "expressions" .= exps]
     ExpReturnSpec _ s tgt -> tag "return_spec"
       ["span" .= s, "target" .= tgt]
-    ExpByValue _ s exp -> tag "%val"
-      ["span" .= s, "expression" .= exp]
 
 instance ToJSON a => ToJSON (Index a) where
   toJSON idx = case idx of
