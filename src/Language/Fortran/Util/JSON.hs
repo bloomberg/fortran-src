@@ -198,7 +198,7 @@ instance ToJSON a => ToJSON (Statement a) where
       ["span" .= s, "format" .= fmt, "arguments" .= args]
     StPrint _ s fmt args -> tag "print"
       ["span" .= s, "format" .= fmt, "arguments" .= args]
-    StTypeBI _ s fmt args -> tag "type"
+    StTypePrint _ s fmt args -> tag "type"
       ["span" .= s, "format" .= fmt, "arguments" .= args]
     StOpen _ s spec -> tag "open"
       ["span" .= s, "specification" .= spec]

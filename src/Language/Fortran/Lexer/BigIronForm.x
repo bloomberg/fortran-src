@@ -158,7 +158,7 @@ tokens :-
   <keyword> "open" / { fortran77P }           { toSC st >> addSpan TOpen  }
   <keyword> "close" / { fortran77P }          { toSC st >> addSpan TClose  }
   <keyword> "print" / { fortran77P }          { toSC st >> addSpan TPrint  }
-  <keyword> "type" / { bigIronP }             { toSC st >> addSpan TTypeBI  }
+  <keyword> "type" / { bigIronP }             { toSC st >> addSpan TTypePrint  }
 
   -- Tokens related to non-executable statements
 
@@ -824,7 +824,7 @@ data Token = TLeftPar             SrcSpan
            | TOpen                SrcSpan
            | TClose               SrcSpan
            | TPrint               SrcSpan
-           | TTypeBI              SrcSpan
+           | TTypePrint           SrcSpan
            | TDimension           SrcSpan
            | TCommon              SrcSpan
            | TEquivalence         SrcSpan

@@ -93,7 +93,7 @@ import Debug.Trace
   read                  { TRead _ }
   write                 { TWrite _ }
   print                 { TPrint _ }
-  typeBI                { TTypeBI _ }
+  typeprint             { TTypePrint _ }
   open                  { TOpen _ }
   close                 { TClose _ }
   inquire               { TInquire _ }
@@ -353,8 +353,8 @@ EXECUTABLE_STATEMENT
 | write CILIST { StWrite () (getTransSpan $1 $2) $2 Nothing }
 | print FORMAT_ID ',' OUT_IOLIST { StPrint () (getTransSpan $1 $4) $2 (Just $ aReverse $4) }
 | print FORMAT_ID { StPrint () (getTransSpan $1 $2) $2 Nothing }
-| typeBI FORMAT_ID ',' OUT_IOLIST { StTypeBI () (getTransSpan $1 $4) $2 (Just $ aReverse $4) }
-| typeBI FORMAT_ID { StTypeBI () (getTransSpan $1 $2) $2 Nothing }
+| typeprint FORMAT_ID ',' OUT_IOLIST { StTypePrint () (getTransSpan $1 $4) $2 (Just $ aReverse $4) }
+| typeprint FORMAT_ID { StTypePrint () (getTransSpan $1 $2) $2 Nothing }
 | open CILIST { StOpen () (getTransSpan $1 $2) $2 }
 | close CILIST { StClose () (getTransSpan $1 $2) $2 }
 | inquire CILIST { StInquire () (getTransSpan $1 $2) $2 }
