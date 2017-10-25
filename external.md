@@ -1,11 +1,42 @@
 ## External Representation
 
+This document describes the JSON structure we use to represent Fortran programs.
 
-``` 
-span ::= "(<start-line>:<start-col>)-(<end-line>:<end-col>)"
+### Notation
+
+We use a BNF-style notation to describe the program structure. Program
+elements are generally represented as JSON objects with field names that
+should hopefully be self-explanatory. Field values will either be string
+literals or type specifications for the value.
+
+For example, 
+
+```
+value ::= { "tag": "integer", "integer": string }
 ```
 
-- NOTE: all subsequent types will have a `"span"` field containing a `span` unless otherwise noted
+says that a `value` is an object with a `"tag"` field whose value must
+be `"integer"` and an `"integer"` field that may contain any `string`.
+
+Type specifications may take three forms
+
+```
+type
+  ::= id                 # reference to a type
+   |  [ type ]           # an array of the underlying type
+   |  type ?             # an optional value of the underlying type (may be `null`)
+```
+
+### Structure
+
+The top-level JSON object we produce is a `program`.
+
+- NOTE: all program elements have a `"span"` field containing a `span` unless otherwise noted
+
+```
+program
+  ::= { "meta_info": {"filename": string}, "program": [program_unit] }
+```
 
 ```
 program_unit
@@ -185,6 +216,9 @@ value
    |  { "tag": "star" }
 ```
 
+- NOTE: the `star` value is used is many places where the `*` literal
+  appears, e.g. to declare an assumed-length array with `integer arr(*)`.
+
 ```
 declarator
   ::= { "tag": "decl_variable", "variable": expresison, "length": expression?, "initial": expression? }
@@ -218,7 +252,16 @@ base_type
   ::= ("integer" | "real" | "double_precision" | "complex" | "double_complex" | "logical" | "character" | "byte" | string)
 ```
 
+- NOTE: Any string other than those listed above denotes a user-defined `structure`.
+
 ```
 selector
   ::= { "length": expression?, "kind": expression? }
 ```
+
+- NOTE: `length` should only be used for `character`s, `kind` indicates the width of the numeric types.
+
+``` 
+span ::= "(<start-line>:<start-col>)-(<end-line>:<end-col>)"
+```
+
