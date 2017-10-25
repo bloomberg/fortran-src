@@ -43,8 +43,8 @@ instance ToJSON BaseType where
     TypeDoubleComplex -> toJSON @String "double_complex"
     TypeLogical -> toJSON @String "logical"
     TypeCharacter -> toJSON @String "character"
+    TypeCustom r -> toJSON @String r
     TypeByte -> toJSON @String "byte"
-    TypeRecord r -> toJSON @String r
 
 instance ToJSON a => ToJSON (TypeSpec a) where
   toJSON (TypeSpec _ s t mSel) = object

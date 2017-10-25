@@ -65,7 +65,6 @@ data BaseType =
   | TypeCharacter
   | TypeCustom String
   | TypeByte
-  | TypeRecord String
   deriving (Ord, Eq, Show, Data, Typeable, Generic)
 
 instance Binary BaseType

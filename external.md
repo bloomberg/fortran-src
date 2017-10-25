@@ -164,7 +164,6 @@ expression
    |  { "tag": "implied_do", "do_spec": do_specification, "expressions": [expression] }
    |  { "tag": "initialisation", "expressions": [expression] }
    |  { "tag": "return_spec", "target": expression }
-   |  { "tag": "%val", "expression": expression }
 ```
 
 ```
