@@ -159,6 +159,11 @@ statement (StDimension _ _ declAList) = do
   forM_ decls $ \ decl -> case decl of
     DeclArray _ _ v _ _ _ -> recordCType CTArray (varName v)
     _                     -> return ()
+statement (StCommon _ _ groups) = do
+  forM_ (aStrip groups) $ \ (CommonGroup _ _ _ decls) ->
+    forM_ (aStrip decls) $ \ decl -> case decl of
+      ExpSubscript _ _ v _ -> recordCType CTArray (varName v)
+      _ -> return ()
 
 statement _ = return ()
 
