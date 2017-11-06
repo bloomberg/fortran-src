@@ -5,6 +5,7 @@ module Language.Fortran.Parser.FortranBigIron
   , statementParser
   , includeParser
   , bigIronParser
+  , bigIronIncludeParser
   , bigIronParserWithModFiles
   , bigIronParserWithIncludes
   ) where

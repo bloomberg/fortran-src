@@ -40,6 +40,27 @@ executable fortran-src
   ghc-options: -fno-warn-tabs
   default-language: Haskell2010
 
+executable fortran-tags
+  main-is: src/Tags.hs
+  build-depends:
+    base >= 4.6 && < 5,
+    mtl >= 2.2 && < 3,
+    array >= 0.5 && < 0.6,
+    uniplate >= 1.6 && < 2,
+    GenericPretty >= 1.2 && < 2,
+    pretty >= 1.1 && < 2,
+    containers >= 0.5 && < 0.6,
+    text >= 1.2 && < 2,
+    bytestring >= 0.10 && < 0.11,
+    binary >= 0.8.3.0 && < 0.9,
+    filepath >= 1.4 && < 2,
+    directory >= 1.2 && < 2,
+    fgl >= 5 && < 6,
+    syb,
+    fortran-src
+  ghc-options: -fno-warn-tabs
+  default-language: Haskell2010
+
 library
   exposed-modules:
     Language.Fortran.Analysis
