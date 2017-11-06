@@ -162,6 +162,7 @@ statement (StDimension _ _ declAList) = do
 
 statement _ = return ()
 
+function :: Data a => InferFunc (Expression (Analysis a))
 function (ExpSubscript _ _ v ixAList)
   --  | any (not . isIxSingle) (aStrip ixAList) = recordCType CTArray (varName v)  -- it's an array (or a string?) FIXME
   | all isIxSingle (aStrip ixAList) = do
