@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
@@ -47,7 +48,7 @@ main = do
         ".ins" -> toMain . fromRight . fromParseResult $ bigIronIncludeParser contents path
         ext    -> error $ "unknown file extension: " ++ ext
   let runInfer pf = analyseTypes . analyseRenames . initAnalysis $ pf
-  mapM_ (printTag path) (allTags . fst $ runInfer prog)
+  mapM_ (printTag path (B.lines contents)) (allTags . fst $ runInfer prog)
   return ()
 
 data Tag = Tag SrcSpan TagKind Name deriving (Eq, Show)
@@ -60,11 +61,38 @@ data TagKind
   | Program
   | Subroutine
   | Structure
+  | Field
   | Global
   deriving (Eq, Show)
 
-printTag :: FilePath -> Tag -> IO ()
-printTag f (Tag (SrcSpan p _) k n) = printf "%s\t%s\t%s;\" %s\tline:%d\n" n f "/TODO/" (formatTagKind k) (posLine p)
+printTag :: FilePath -> [B.ByteString] -> Tag -> IO ()
+printTag path lines (Tag (SrcSpan p1 p2) k n) =
+  printf "%s\t%s\t/%s/;\" %s\tline:%d\n" n path (mkRegex lines p1 p2) (formatTagKind k) (posLine p1)
+
+mkRegex :: [B.ByteString] -> Position -> Position -> String
+mkRegex lines p1 p2
+  | posLine p1 == posLine p2
+  = "^" ++ escape (B.unpack (B.take (posColumn p2) line))
+  | otherwise
+  = "^" ++ escape (B.unpack line) ++ "$"
+  where
+  line = lines !! (posLine p1 - 1)
+  escape = concatMap $ \case
+             -- '^' -> "\\^"
+             -- '.' -> "\\."
+             -- '[' -> "\\["
+             -- ']' -> "\\]"
+             -- '$' -> "\\$"
+             -- '(' -> "\\("
+             -- ')' -> "\\)"
+             -- '*' -> "\\*"
+             -- '{' -> "\\{"
+             -- '}' -> "\\}"
+             -- '?' -> "\\?"
+             -- '+' -> "\\+"
+             -- '|' -> "\\|"
+             '/' -> "\\/"
+             c   -> [c]
 
 formatTagKind :: TagKind -> String
 formatTagKind k = case k of
@@ -75,12 +103,15 @@ formatTagKind k = case k of
   Program -> "program"
   Subroutine -> "subroutine"
   Structure -> "type"
+  Field -> "component"
   Global -> "variable"
 
 allTags :: forall a. Data a => ProgramFile (Analysis a) -> [Tag]
 allTags = everything (++) (mkQ [] (programUnitTags @a)
                            `extQ` (statementTags @a)
-                           `extQ` (commonGroupTags @a))
+                           `extQ` (commonGroupTags @a)
+                           `extQ` (structureItemTags @a)
+                          )
 
 programUnitTags :: ProgramUnit (Analysis a) -> [Tag]
 programUnitTags pu = case pu of
@@ -93,21 +124,27 @@ programUnitTags pu = case pu of
 statementTags :: Statement (Analysis a) -> [Tag]
 statementTags st = case st of
   StDeclaration _ s _ _ ds -> concatMap declaratorTags (aStrip ds)
-  -- StStructure _ s (Just n) sis -> undefined
-  -- StData _ s ds -> undefined
-  -- StCommon _ _ cs -> undefined
+  StStructure _ s mn sis -> maybeToList (Tag s Structure <$> mn)
   StFunction _ _ (ExpValue _ s (ValVariable n)) _ _ -> [Tag s Function n]
   _ -> []
 
-declaratorTags :: Declarator (Analysis a) -> [Tag]
-declaratorTags (DeclVariable _ _ name _ _)
-  = maybeToList $ varTag Local name
-declaratorTags (DeclArray _ _ name _ _ _)
-  = maybeToList $ varTag Local name
+structureItemTags :: StructureItem (Analysis a) -> [Tag]
+structureItemTags (StructFields _ _ _ _ ds)
+  = concatMap (declaratorTagsWith Field) (aStrip ds)
+structureItemTags _ = []
 
-dataGroupTags :: DataGroup (Analysis a) -> [Tag]
-dataGroupTags (DataGroup _ _ mname names)
-  = undefined -- mapMaybe (varTag CommonBlock) (maybeToList mname) ++ mapMaybe (varTag Local) (aStrip names)
+declaratorTags :: Declarator (Analysis a) -> [Tag]
+declaratorTags = declaratorTagsWith Local
+
+declaratorTagsWith :: TagKind -> Declarator (Analysis a) -> [Tag]
+declaratorTagsWith k (DeclVariable _ _ name _ _)
+  = maybeToList $ varTag k name
+declaratorTagsWith k (DeclArray _ _ name _ _ _)
+  = maybeToList $ varTag k name
+
+-- dataGroupTags :: DataGroup (Analysis a) -> [Tag]
+-- dataGroupTags (DataGroup _ _ mname names)
+--   = undefined -- mapMaybe (varTag CommonBlock) (maybeToList mname) ++ mapMaybe (varTag Local) (aStrip names)
 
 commonGroupTags :: CommonGroup (Analysis a) -> [Tag]
 commonGroupTags (CommonGroup _ _ mname names)
