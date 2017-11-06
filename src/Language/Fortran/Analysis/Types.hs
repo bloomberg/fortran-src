@@ -48,6 +48,7 @@ analyseTypesWithEnv env pf@(ProgramFile mi _) = fmap environ . runInfer (miVersi
   mapM_ programUnit (allProgramUnits pf)
   mapM_ declarator (allDeclarators pf)
   mapM_ statement (allStatements pf)
+  mapM_ function (allExpressions pf)
 
   -- Gather types for known entry points.
   eps <- gets (M.toList . entryPoints)
@@ -160,6 +161,17 @@ statement (StDimension _ _ declAList) = do
     _                     -> return ()
 
 statement _ = return ()
+
+function (ExpSubscript _ _ v ixAList)
+  --  | any (not . isIxSingle) (aStrip ixAList) = recordCType CTArray (varName v)  -- it's an array (or a string?) FIXME
+  | all isIxSingle (aStrip ixAList) = do
+    let n = varName v
+    mIDType <- getRecordedType n
+    case mIDType of
+      Just (IDType mBT (Just CTArray)) -> return ()                -- do nothing, it's already known to be an array
+      Just (IDType mBT (Just CTFunction)) -> return ()             -- do nothing, it's already known to be a function
+      _                                -> recordCType CTExternal n -- assume it's an external function call
+function _ = return ()
 
 annotateExpression :: Data a => Expression (Analysis a) -> Infer (Expression (Analysis a))
 annotateExpression e@(ExpValue _ _ (ValVariable _))  = maybe e (flip setIDType e) `fmap` getRecordedType (varName e)
