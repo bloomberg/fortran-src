@@ -30,6 +30,7 @@ data FortranVersion = Fortran66
                     | FortranBigIron
                     | Fortran77Extended
                     | Fortran90
+                    | Fortran95
                     | Fortran2003
                     | Fortran2008
                     deriving (Ord, Eq, Data, Typeable, Generic, ToJSON)
@@ -40,6 +41,7 @@ instance Show FortranVersion where
   show Fortran77Extended = "Fortran 77 Extended"
   show FortranBigIron = "Fortran 77 (Big Iron Edition)"
   show Fortran90 = "Fortran 90"
+  show Fortran95 = "Fortran 95"
   show Fortran2003 = "Fortran 2003"
   show Fortran2008 = "Fortran 2008"
 

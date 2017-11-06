@@ -41,8 +41,8 @@ program
 ```
 program_unit
   ::= { "tag": "main", "name": string, "blocks": [block] }
-   |  { "tag": "subroutine", "name": string, "recursive": bool, "arguments": [expression]?, "blocks": [block] }
-   |  { "tag": "function", "name": string, "recursive": bool, "arguments": [expression]?, "type": type_spec, "blocks": [block], "result": expression? }
+   |  { "tag": "subroutine", "name": string, "arguments": [expression]?, "blocks": [block] }
+   |  { "tag": "function", "name": string, "arguments": [expression]?, "type": type_spec, "blocks": [block], "result": expression? }
    |  { "tag": "block_data", "name": string?, "blocks": [block] }
 ```
 

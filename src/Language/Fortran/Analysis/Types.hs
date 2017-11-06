@@ -122,6 +122,7 @@ statement (StDeclaration _ _ (TypeSpec _ _ baseType _) mAttrAList declAList)
   | mAttrs  <- maybe [] aStrip mAttrAList
   , isArray <- any isAttrDimension mAttrs
   , isParam <- any isAttrParameter mAttrs
+  , isExtrn <- any isAttrExternal mAttrs
   , decls   <- aStrip declAList = do
     env <- gets environ
     forM_ decls $ \ decl -> case decl of
@@ -130,11 +131,14 @@ statement (StDeclaration _ _ (TypeSpec _ _ baseType _) mAttrAList declAList)
       DeclVariable _ _ v Nothing _  -> recordType baseType cType n
         where
           n = varName v
-          cType | isArray                                     = CTArray
+          cType | isExtrn                                     = CTExternal
+                | isArray                                     = CTArray
                 | isParam                                     = CTParameter
                 | Just (IDType _ (Just ct)) <- M.lookup n env = ct
                 | otherwise                                   = CTVariable
-
+statement (StExternal _ _ varAList) = do
+  let vars = aStrip varAList
+  mapM_ (recordCType CTExternal . varName) vars
 statement (StExpressionAssign _ _ (ExpSubscript _ _ v ixAList) _)
   --  | any (not . isIxSingle) (aStrip ixAList) = recordCType CTArray (varName v)  -- it's an array (or a string?) FIXME
   | all isIxSingle (aStrip ixAList) = do
@@ -232,6 +236,9 @@ isAttrDimension _                  = False
 
 isAttrParameter (AttrParameter {}) = True
 isAttrParameter _                  = False
+
+isAttrExternal (AttrExternal {}) = True
+isAttrExternal _                 = False
 
 isIxSingle (IxSingle {}) = True
 isIxSingle _             = False

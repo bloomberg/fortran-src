@@ -58,6 +58,7 @@ library
     Language.Fortran.Parser.Fortran66
     Language.Fortran.Parser.Fortran77
     Language.Fortran.Parser.Fortran90
+    Language.Fortran.Parser.Fortran95Experimental
     Language.Fortran.Parser.FortranBigIron
     Language.Fortran.Parser.Utils
     Language.Fortran.PrettyPrint
@@ -96,6 +97,7 @@ library
 test-suite spec
   type: exitcode-stdio-1.0
   build-depends:
+    deepseq,
     base >= 4.6 && < 5,
     hspec >= 2.2 && < 3,
     mtl >= 2.2 && < 3,

@@ -67,13 +67,13 @@ instance ToJSON a => ToJSON (ProgramUnit a) where
       ["span" .= s, "name" .= name, "blocks" .= blocks, "subprograms" .= pus]
     PUModule _ s name blocks pus -> tag "module"
       ["span" .= s, "name" .= name, "blocks" .= blocks, "subprograms" .= pus]
-    PUSubroutine _ s r name args blocks pus -> tag "subroutine"
-      [ "span" .= s, "recursive" .= r, "name" .= name
+    PUSubroutine _ s _ name args blocks pus -> tag "subroutine"
+      [ "span" .= s, "name" .= name
       , "arguments" .= args, "blocks" .= blocks
       , "subprograms" .= pus
       ]
-    PUFunction _ s t r name args res blocks pus -> tag "function"
-      [ "span" .= s, "recursive" .= r, "name" .= name
+    PUFunction _ s t _ name args res blocks pus -> tag "function"
+      [ "span" .= s, "name" .= name
       , "type" .= t
       , "arguments" .= args, "blocks" .= blocks
       , "result" .= res

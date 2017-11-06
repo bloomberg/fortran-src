@@ -1,20 +1,65 @@
-module Language.Fortran.Transformation.Grouping ( groupIf
+module Language.Fortran.Transformation.Grouping ( groupForall
+                                                , groupIf
                                                 , groupDo
                                                 , groupLabeledDo
                                                 , groupCase
                                                 ) where
 
 import Language.Fortran.AST
+import Language.Fortran.Util.Position
 import Language.Fortran.Analysis
 import Language.Fortran.Transformation.TransformMonad
 
 import Data.Data
 import Data.Generics.Uniplate.Operations
 
+type ABlocks a = [ Block (Analysis a) ]
 
-genericGroup :: Data a => ([ Block (Analysis a) ] -> [ Block (Analysis a) ]) -> Transform a ()
+genericGroup :: Data a => (ABlocks a -> ABlocks a) -> Transform a ()
 genericGroup groupingFunction =
     modifyProgramFile $ transformBi groupingFunction
+
+--------------------------------------------------------------------------------
+-- Grouping FORALL statement blocks into FORALL blocks in entire parse tree
+--------------------------------------------------------------------------------
+groupForall :: Data a => Transform a ()
+groupForall = genericGroup groupForall'
+
+
+groupForall' :: ABlocks a -> ABlocks a
+groupForall' [] = []
+groupForall' (b:bs) = b' : bs'
+  where
+    (b', bs') = case b of
+      BlStatement a s label st
+        | StForall _ _ mTarget header <- st ->
+          let ( blocks, leftOverBlocks, endLabel ) =
+               collectNonForallBlocks groupedBlocks mTarget
+          in ( BlForall a (getTransSpan s blocks) label mTarget header blocks endLabel
+             , leftOverBlocks)
+        | StForallStatement _ _ header st' <- st ->
+          let block = BlStatement a (getSpan st') Nothing st' in
+          ( BlForall a (getTransSpan s st') label Nothing header [block] Nothing, groupedBlocks )
+      b | containsGroups b ->
+        ( applyGroupingToSubblocks groupForall' b, groupedBlocks )
+      _ -> (b, groupedBlocks)
+    groupedBlocks = groupForall' bs
+
+collectNonForallBlocks :: ABlocks a -> Maybe String
+                          -> ( ABlocks a
+                             , ABlocks a
+                             , Maybe (Expression (Analysis a)) )
+collectNonForallBlocks blocks mNameTarget =
+  case blocks of
+    b@(BlStatement _ _ mLabel (StEndForall _ _ mName)):rest
+      | mName == mNameTarget -> ([], rest, mLabel)
+      | otherwise ->
+        error "Forall block name does not match that of the end statement."
+    b:bs ->
+      let (bs', rest, mLabel) = collectNonForallBlocks bs mNameTarget
+      in (b : bs', rest, mLabel)
+    _ -> error "Premature file ending while parsing structured forall block."
+
 
 --------------------------------------------------------------------------------
 -- Grouping if statement blocks into if blocks in entire parse tree
@@ -32,9 +77,9 @@ groupIf = genericGroup groupIf'
 --        structured if block.
 -- 1.5  Prepend the block to the left over artefacts, which have already been
 --        grouped in 1.1
--- 2. Case: head is a statement block contianing any other statement:
+-- 2. Case: head is a statement block containing any other statement:
 -- 2.1  Group everything to the right and prepend the head.
-groupIf' :: [ Block (Analysis a) ] -> [ Block (Analysis a) ]
+groupIf' :: ABlocks a -> ABlocks a
 groupIf' [] = []
 groupIf' (b:bs) = b' : bs'
   where
@@ -70,10 +115,10 @@ groupIf' (b:bs) = b' : bs'
 -- In that case it decomposes the block into list of (maybe) conditions and
 -- blocks that those conditions correspond to. Additionally, it returns
 -- whatever is after the if block.
-decomposeIf :: [ Block (Analysis a) ]
+decomposeIf :: ABlocks a
             -> ( [ Maybe (Expression (Analysis a)) ],
-                 [ [ Block (Analysis a) ] ],
-                 [ Block (Analysis a) ],
+                 [ ABlocks a ],
+                 ABlocks a,
                  Maybe (Expression (Analysis a)) )
 decomposeIf blocks@(BlStatement _ _ _ (StIfThen _ _ mTargetName _):rest) =
     decomposeIf' blocks
@@ -97,7 +142,7 @@ decomposeIf blocks@(BlStatement _ _ _ (StIfThen _ _ mTargetName _):rest) =
          , endLabel )
 
 -- This compiles the executable blocks under various if conditions.
-collectNonConditionalBlocks :: [ Block (Analysis a) ] -> ([ Block (Analysis a) ], [ Block (Analysis a) ])
+collectNonConditionalBlocks :: ABlocks a -> (ABlocks a, ABlocks a)
 collectNonConditionalBlocks blocks =
   case blocks of
     BlStatement _ _ _ StElsif{}:_ -> ([], blocks)
@@ -120,7 +165,7 @@ collectNonConditionalBlocks blocks =
 groupDo :: Data a => Transform a ()
 groupDo = genericGroup groupDo'
 
-groupDo' :: [ Block (Analysis a) ] -> [ Block (Analysis a) ]
+groupDo' :: ABlocks a -> ABlocks a
 groupDo' [ ] = [ ]
 groupDo' blocks@(b:bs) = b' : bs'
   where
@@ -143,9 +188,9 @@ groupDo' blocks@(b:bs) = b' : bs'
       _ -> ( b, groupedBlocks )
     groupedBlocks = groupDo' bs -- Assume everything to the right is grouped.
 
-collectNonDoBlocks :: [ Block (Analysis a) ] -> Maybe String
-                   -> ( [ Block (Analysis a)]
-                      , [ Block (Analysis a) ]
+collectNonDoBlocks :: ABlocks a -> Maybe String
+                   -> ( ABlocks a
+                      , ABlocks a
                       , Maybe (Expression (Analysis a)) )
 collectNonDoBlocks blocks mNameTarget =
   case blocks of
@@ -165,7 +210,7 @@ collectNonDoBlocks blocks mNameTarget =
 groupLabeledDo :: Data a => Transform a ()
 groupLabeledDo = genericGroup groupLabeledDo'
 
-groupLabeledDo' :: [ Block (Analysis a) ] -> [ Block (Analysis a) ]
+groupLabeledDo' :: ABlocks a -> ABlocks a
 groupLabeledDo' [ ] = [ ]
 groupLabeledDo' blos@(b:bs) = b' : bs'
   where
@@ -192,8 +237,8 @@ groupLabeledDo' blos@(b:bs) = b' : bs'
     groupedBlocks = groupLabeledDo' bs
 
 
-collectNonLabeledDoBlocks :: Maybe (Expression (Analysis a)) -> [ Block (Analysis a) ]
-                          -> ([ Block (Analysis a) ], [ Block (Analysis a) ])
+collectNonLabeledDoBlocks :: Maybe (Expression (Analysis a)) -> ABlocks a
+                          -> (ABlocks a, ABlocks a)
 collectNonLabeledDoBlocks targetLabel blocks =
   case blocks of
     -- Didn't find a statement with matching label; don't group
@@ -220,7 +265,7 @@ strip = dropWhile (=='0')
 groupCase :: Data a => Transform a ()
 groupCase = genericGroup groupCase'
 
-groupCase' :: [ Block (Analysis a) ] -> [ Block (Analysis a) ]
+groupCase' :: ABlocks a -> ABlocks a
 groupCase' [] = []
 groupCase' (b:bs) = b' : bs'
   where
@@ -237,10 +282,10 @@ groupCase' (b:bs) = b' : bs'
     groupedBlocks = groupCase' bs -- Assume everything to the right is grouped.
     isComment b = case b of { BlComment{} -> True; _ -> False }
 
-decomposeCase :: [ Block (Analysis a) ] -> Maybe String
+decomposeCase :: ABlocks a -> Maybe String
               -> ( [ Maybe (AList Index (Analysis a)) ]
-                 , [ [ Block (Analysis a) ] ]
-                 , [ Block (Analysis a) ]
+                 , [ ABlocks a ]
+                 , ABlocks a
                  , Maybe (Expression (Analysis a)) )
 decomposeCase blocks@(BlStatement _ _ mLabel st:rest) mTargetName =
     case st of
@@ -263,7 +308,7 @@ decomposeCase blocks@(BlStatement _ _ mLabel st:rest) mTargetName =
          , rest', endLabel )
 
 -- This compiles the executable blocks under various if conditions.
-collectNonCaseBlocks :: [ Block (Analysis a) ] -> ([ Block (Analysis a) ], [ Block (Analysis a) ])
+collectNonCaseBlocks :: ABlocks a -> (ABlocks a, ABlocks a)
 collectNonCaseBlocks blocks =
   case blocks of
     b@(BlStatement _ _ _ st):_
@@ -288,7 +333,7 @@ containsGroups b =
     BlInterface{} -> False
     BlComment{} -> False
 
-applyGroupingToSubblocks :: ([ Block (Analysis a) ] -> [ Block (Analysis a) ]) -> Block (Analysis a) -> Block (Analysis a)
+applyGroupingToSubblocks :: (ABlocks a -> ABlocks a) -> Block (Analysis a) -> Block (Analysis a)
 applyGroupingToSubblocks f b
   | BlStatement{} <- b =
       error "Individual statements do not have subblocks. Must not occur."
