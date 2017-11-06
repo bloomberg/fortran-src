@@ -171,6 +171,12 @@ function (ExpSubscript _ _ v ixAList)
       Just (IDType mBT (Just CTArray)) -> return ()                -- do nothing, it's already known to be an array
       Just (IDType mBT (Just CTFunction)) -> return ()             -- do nothing, it's already known to be a function
       _                                -> recordCType CTExternal n -- assume it's an external function call
+function (ExpFunctionCall _ _ v ixAList) = do
+    let n = varName v
+    mIDType <- getRecordedType n
+    case mIDType of
+      Just (IDType mBT (Just CTFunction)) -> return ()             -- do nothing, it's already known to be a function
+      _                                -> recordCType CTExternal n -- assume it's an external function call
 function _ = return ()
 
 annotateExpression :: Data a => Expression (Analysis a) -> Infer (Expression (Analysis a))
