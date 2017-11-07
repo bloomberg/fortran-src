@@ -96,7 +96,7 @@ mkRegex lines p1 p2
 
 formatTagKind :: TagKind -> String
 formatTagKind k = case k of
-  BlockData -> "blockData"
+  BlockData -> "block data"
   CommonBlock -> "common"
   Function -> "function"
   Local -> "local"
