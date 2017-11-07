@@ -13,7 +13,7 @@ module Language.Fortran.Lexer.BigIronForm where
 import Data.Word (Word8)
 import Data.Char (toLower, ord, isDigit)
 import Data.List (isPrefixOf, any)
-import Data.Maybe (fromJust, isNothing)
+import Data.Maybe (fromJust, isNothing, isJust)
 import Data.Data
 import qualified Data.Bits
 import qualified Data.ByteString.Char8 as B
@@ -969,7 +969,8 @@ updateLexeme maybeChar p ai =
           Just c -> c : match
           Nothing -> match
       start = lexemeStart lexeme
-      newStart = if isNothing start then Just p else start
+                 -- skipping should not start a new lexeme
+      newStart = if isNothing start && isJust maybeChar then Just p else start
       newEnd = Just p in
     ai { aiLexeme = Lexeme newMatch newStart newEnd }
 
@@ -1072,7 +1073,7 @@ advance move ai =
 skipComment :: AlexInput -> Position -> Position
 skipComment ai p =
   p { posAbsoluteOffset = posAbsoluteOffset p + length line
-    , posColumn = length line
+    , posColumn = posColumn p + length line
     }
   where
   line = takeLine p ai
@@ -1085,7 +1086,7 @@ skipCommentLines ai p = go p p
     -- eof is not a comment line
     | not (null line)
     , isCommentLine ai p
-    = go p p{ posAbsoluteOffset = posAbsoluteOffset p + length line + 1
+    = go p p{ posAbsoluteOffset = posAbsoluteOffset p + length line + 1 -- skip the newline
             , posColumn = 1, posLine = posLine p + 1
             }
     | isContinuation ai'
@@ -1097,7 +1098,7 @@ skipCommentLines ai p = go p p
     line = takeLine p ai
     line' = takeLine p' ai
     p2 = p' { posAbsoluteOffset = posAbsoluteOffset p' + length line'
-            , posColumn = length line'
+            , posColumn = length line' + 1
             }
     ai' = ai { aiPosition = p2 }
 
