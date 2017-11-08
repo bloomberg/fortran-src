@@ -41,7 +41,7 @@ main = do
   (opts, [path]) <- compileArgs =<< getArgs
   let version = FortranBigIron
   contents <- truncateLines version <$> flexReadFile path
-  let toMain blks = ProgramFile (MetaInfo version path) [PUMain () (getSpan blks) Nothing blks Nothing]
+  let toMain blks = ProgramFile (MetaInfo version path) [PUMain () (SrcSpan initPosition initPosition) Nothing blks Nothing]
   let prog = case takeExtension path of
         ".f"   -> fromRight . fromParseResult $ bigIronParser contents path
         ".inc" -> toMain . fromRight . fromParseResult $ bigIronIncludeParser contents path
