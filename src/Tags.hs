@@ -67,7 +67,7 @@ data TagKind
 
 printTag :: FilePath -> [B.ByteString] -> Tag -> IO ()
 printTag path lines (Tag (SrcSpan p1 p2) k n) =
-  printf "%s\t%s\t/%s/;\" %s\tline:%d\n" (normalizeName n) path (mkRegex lines p1 p2) (formatTagKind k) (posLine p1)
+  printf "%s\t%s\t/%s/;\"\t%s\tline:%d\n" (normalizeName n) path (mkRegex lines p1 p2) (formatTagKind k) (posLine p1)
 
 mkRegex :: [B.ByteString] -> Position -> Position -> String
 mkRegex lines p1 p2
