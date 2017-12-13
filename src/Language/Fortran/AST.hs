@@ -831,6 +831,7 @@ nonExecutableStatement v s = case s of
     StFormatBogus {} -> True
     StInclude {}     -> True
     StDeclaration {} -> True
+    StStructure {}   -> True
     _                -> False
 
 executableStatement :: FortranVersion -> Statement a -> Bool
